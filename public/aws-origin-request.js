@@ -7,11 +7,13 @@ exports.handler = async (event, context, callback) => {
   let { request } = event.Records[0].cf;
   const { uri, headers } = request || {};
   // 이벤트 페이지 인지 검사.
-  const match = /event\/\S+/g.exec(uri);
-  const path = match[0].split("?")[0];
+  const match = /(event|event_kr)\/\S+/g.exec(uri);
+  const path = match ? match[0].split("?")[0] : '';
   console.log("PATH:" + path);
   if (!path || !path[0]) {
     console.log("NOT EVENT URL");
+    callback(null, request);
+    return;
   }
   const isFileUri = /(\.\w+)$/.test(path);
   if (path && !isFileUri) {
