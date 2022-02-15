@@ -1,0 +1,9 @@
+{
+  "/event/evt1": {
+    "img":"/og_img/event/evt1/meta-en.png"
+  },
+  "/event_kr/evt1": {
+    "img":"/og_img/event/evt1/meta-ko.png",
+    "title": "오예"
+  }
+}
