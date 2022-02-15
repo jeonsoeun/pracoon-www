@@ -7,7 +7,7 @@ exports.handler = async (event, context, callback) => {
   const s3 = new aws.S3({
     region: "ap-northeast-2",
   });
-  // config.json 파일 읽어오기
+  // ogConfig.json 파일 읽어오기
   const configParam = {
     Bucket: BUCKET_NAME,
     Key: `ogConfig.json`,
@@ -57,6 +57,7 @@ exports.handler = async (event, context, callback) => {
         })
         .promise();
       if (rootHtmlObj?.Body) {
+        // 기존 /index.html의 og tag들을 수정
         const rootHtmlStr = rootHtmlObj?.Body.toString("utf-8");
         let newHtmlStr = rootHtmlStr;
         if (configJSON[path].img) {
