@@ -42,8 +42,15 @@ exports.handler = async (event, context, callback) => {
         Bucket: BUCKET_NAME,
         Key: `${path}/config.json`,
       };
-      const configObj = await s3.getObject(configParam).promise();
-      const configStr = configObj?.Body;
+      let configStr = ''
+      try {
+        const configObj = await s3.getObject(configParam).promise();
+        configStr = configObj?.Body;
+      } catch (err) {
+        console.log('CONFIG OBJ ERROR: ' + err);
+        callback(null, request);
+        return;
+      }
       console.log("CONFIG STR" + configStr);
       if (configStr) {
         const configJSON = JSON.parse(configStr);
