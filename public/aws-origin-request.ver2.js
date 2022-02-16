@@ -1,4 +1,4 @@
-// 이 방법을 쓰면 근데.. 구글은 되는데 페북이랑 카카오가 안된다.
+// 페북, 카카오, 구글 확인 완.
 const aws = require("aws-sdk");
 
 exports.handler = async (event, context, callback) => {
