@@ -1,9 +1,18 @@
 {
+  "default": {
+    "og:image":"/meta.jpg",
+    "og:title": "P.RACOON Diary",
+    "og:description": "정보 저장소",
+    "og:url": "https://d2ea53l1kq1p10.cloudfront.net"
+  },
   "/event/evt1": {
-    "img":"/og_img/event/evt1/meta-en.png"
+    "og:image":"/og_img/event/evt1/meta-en.png",
+    "og:url": "https://d2ea53l1kq1p10.cloudfront.net/event/evt1"
   },
   "/event_kr/evt1": {
-    "img":"/og_img/event/evt1/meta-ko.png",
-    "title": "오예"
+    "og:image": "/og_img/event/evt1/meta-ko.png",
+    "og:title": "SEO TEST",
+    "title": "SEO TEST TITLE",
+    "og:url": "https://d2ea53l1kq1p10.cloudfront.net/event_kr/evt1"
   }
 }
