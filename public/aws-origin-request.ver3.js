@@ -9,6 +9,7 @@ exports.handler = async (event, context, callback) => {
   if ("is-crawler" in headers) {
     is_crawler = headers["is-crawler"][0].value.toLowerCase();
   }
+  console.log('is_crawler:'+is_crawler)
   if (is_crawler === "true") {
     const s3 = new aws.S3({
       region: "ap-northeast-2",

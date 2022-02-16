@@ -4,7 +4,7 @@ const aws = require("aws-sdk");
 exports.handler = async (event, context, callback) => {
   const BUCKET_NAME = "pracoon-www";
   let { request } = event.Records[0].cf;
-  const { uri, headers } = request || {};
+  const { uri } = request || {};
   const s3 = new aws.S3({
     region: "ap-northeast-2",
   });
@@ -43,6 +43,7 @@ exports.handler = async (event, context, callback) => {
     }
     // ogConfig.json에 해당 경로가 있는지 확인.
     if (path && configJSON[path]) {
+      const config = configJSON[path];
       // 원본 html 가져오기
       const rootHtmlParam = {
         Bucket: BUCKET_NAME,
@@ -61,22 +62,46 @@ exports.handler = async (event, context, callback) => {
         // 기존 /index.html의 og tag들을 수정
         const rootHtmlStr = rootHtmlObj?.Body.toString("utf-8");
         let newHtmlStr = rootHtmlStr;
-        if (configJSON[path].img) {
+        if (config["og:image"]) {
           newHtmlStr = newHtmlStr.replace(
             /(?<=<meta property=\"og:image\" content=\"https:\/\/\S+)\/\S+(?=\")/,
-            configJSON[path].img
+            config["og:image"]
+          ).replace(
+            /(?<=<meta name=\"twitter:image\" content=\"https:\/\/\S+)\/\S+(?=\")/,
+            config["og:image"]
           );
         }
-        if (configJSON[path].title) {
+        if (config["og:title"]) {
           newHtmlStr = newHtmlStr.replace(
             /(?<=<meta property=\"og:title\" content=\")\S+(?=\")/,
-            configJSON[path].title
-          );
-          newHtmlStr = newHtmlStr.replace(
-            /(?<=<title>)\S+(?=<\/title>)/,
-            configJSON[path].title
+            config["og:title"]
+          ).replace(
+            /(?<=<meta name=\"twitter:title\" content=\")\S+(?=\")/,
+            config["og:title"]
           );
         }
+        if (config["og:description"]) {
+          newHtmlStr = newHtmlStr.replace(
+            /(?<=<meta property=\"og:description\" content=\")\S+(?=\")/,
+            config["og:description"]
+          ).replace(
+            /(?<=<meta name=\"twitter:description\" content=\")\S+(?=\")/,
+            config["og:description"]
+          );
+        }
+        if (config["og:url"]) {
+          newHtmlStr = newHtmlStr.replace(
+            /(?<=<meta property=\"og:url\" content=\")\S+(?=\")/,
+            config["og:url"]
+          );
+        }
+        if (config["title"]) {
+          newHtmlStr = newHtmlStr.replace(
+            /(?<=<title>)\S+(?=<\/title>)/,
+            config["title"]
+          );
+        }
+        console.log('NEW HTML \n'+newHtmlStr)
         return {
           status: 200,
           statusCode: 200,
