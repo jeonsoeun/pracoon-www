@@ -1,4 +1,5 @@
 // 페북, 카카오, 구글 확인 완.
+/* 루트경로에 ogConfig.json을 찾아서 현재 경로가 ogConfig.json에 등록되어 있는지 확인 후 해당 정보를 가지고 meta값 변경 */
 const aws = require("aws-sdk");
 
 exports.handler = async (event, context, callback) => {

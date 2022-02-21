@@ -1,3 +1,5 @@
+/* aws-view-request.js랑 같이 사용해야 하고, 봇인지 아닌지 검사해서 봇일때 html 따로 만들어서 내려주기 */
+/* 검증을 못했지만 다른 사람들이 잘 되는걸로 봐서 될 것으로 보인다. 내가 실패한 이유는 view request를 추가하지 않고 테스트해서..; */
 const aws = require("aws-sdk");
 
 exports.handler = async (event, context, callback) => {

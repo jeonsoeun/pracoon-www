@@ -1,4 +1,4 @@
-/** @format */
+/** `/event/`* 또는 `/event_kr/*` 경로 일때 /event[_kr]/config.json 을 확인해서 meta 값 변경. */
 
 const aws = require("aws-sdk");
 
