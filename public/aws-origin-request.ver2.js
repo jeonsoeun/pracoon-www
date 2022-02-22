@@ -55,7 +55,7 @@ exports.handler = async (event, context, callback) => {
           if (err) {
             console.error("ERR ROOT HTML:" + err);
           } else {
-            console.log("ROOT HTML:" + data.Body.toString("utf-8"));
+            console.log("ROOT HTML LOADED");
           }
         })
         .promise();
@@ -74,19 +74,19 @@ exports.handler = async (event, context, callback) => {
         }
         if (config["og:title"]) {
           newHtmlStr = newHtmlStr.replace(
-            /(?<=<meta property=\"og:title\" content=\")\S+(?=\")/,
+            /(?<=<meta property=\"og:title\" content=\").+(?=\")/,
             config["og:title"]
           ).replace(
-            /(?<=<meta name=\"twitter:title\" content=\")\S+(?=\")/,
+            /(?<=<meta name=\"twitter:title\" content=\").+(?=\")/,
             config["og:title"]
           );
         }
         if (config["og:description"]) {
           newHtmlStr = newHtmlStr.replace(
-            /(?<=<meta property=\"og:description\" content=\")\S+(?=\")/,
+            /(?<=<meta property=\"og:description\" content=\").+(?=\")/,
             config["og:description"]
           ).replace(
-            /(?<=<meta name=\"twitter:description\" content=\")\S+(?=\")/,
+            /(?<=<meta name=\"twitter:description\" content=\").+(?=\")/,
             config["og:description"]
           );
         }
@@ -98,11 +98,11 @@ exports.handler = async (event, context, callback) => {
         }
         if (config["title"]) {
           newHtmlStr = newHtmlStr.replace(
-            /(?<=<title>)\S+(?=<\/title>)/,
+            /(?<=<title>).+(?=<\/title>)/,
             config["title"]
           );
         }
-        console.log('NEW HTML \n'+newHtmlStr)
+        console.log('NEW HTML CREATED')
         return {
           status: 200,
           statusCode: 200,
@@ -116,7 +116,11 @@ exports.handler = async (event, context, callback) => {
             ],
           },
         };
+      } else {
+        console.log('NO ROOT HTML')
       }
+    } else {
+      console.log('ogConfig.json NOT EXIST')
     }
   }
   callback(null, request);
