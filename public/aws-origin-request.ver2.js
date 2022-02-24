@@ -65,40 +65,40 @@ exports.handler = async (event, context, callback) => {
         let newHtmlStr = rootHtmlStr;
         if (config["og:image"]) {
           newHtmlStr = newHtmlStr.replace(
-            /(?<=<meta property=\"og:image\" content=\"https:\/\/\S+)\/\S+(?=\")/,
+            /(?<=<meta property=\"og:image\" content=\"https:\/\/\S+)\/\S+?(?=\")/,
             config["og:image"]
           ).replace(
-            /(?<=<meta name=\"twitter:image\" content=\"https:\/\/\S+)\/\S+(?=\")/,
+            /(?<=<meta name=\"twitter:image\" content=\"https:\/\/\S+)\/\S+?(?=\")/,
             config["og:image"]
           );
         }
         if (config["og:title"]) {
           newHtmlStr = newHtmlStr.replace(
-            /(?<=<meta property=\"og:title\" content=\").+(?=\")/,
+            /(?<=<meta property=\"og:title\" content=\").+?(?=\")/,
             config["og:title"]
           ).replace(
-            /(?<=<meta name=\"twitter:title\" content=\").+(?=\")/,
+            /(?<=<meta name=\"twitter:title\" content=\").+?(?=\")/,
             config["og:title"]
           );
         }
         if (config["og:description"]) {
           newHtmlStr = newHtmlStr.replace(
-            /(?<=<meta property=\"og:description\" content=\").+(?=\")/,
+            /(?<=<meta property=\"og:description\" content=\").+?(?=\")/,
             config["og:description"]
           ).replace(
-            /(?<=<meta name=\"twitter:description\" content=\").+(?=\")/,
+            /(?<=<meta name=\"twitter:description\" content=\").+?(?=\")/,
             config["og:description"]
           );
         }
         if (config["og:url"]) {
           newHtmlStr = newHtmlStr.replace(
-            /(?<=<meta property=\"og:url\" content=\")\S+(?=\")/,
+            /(?<=<meta property=\"og:url\" content=\")\S+?(?=\")/,
             config["og:url"]
           );
         }
         if (config["title"]) {
           newHtmlStr = newHtmlStr.replace(
-            /(?<=<title>).+(?=<\/title>)/,
+            /(?<=<title>).+?(?=<\/title>)/,
             config["title"]
           );
         }
