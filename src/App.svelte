@@ -1,11 +1,11 @@
 <script lang="ts">
-	let name = 'world';
+  import Editor from "./components/Editor.svelte";
+  let name = "world";
 </script>
 
-<h1>Hello {name}!</h1>
+<div>
+  <Editor></Editor>
+</div>
 
 <style lang="scss">
-	h1 {
-		font-weight: normal;
-	}
 </style>
