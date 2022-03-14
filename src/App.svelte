@@ -1,5 +1,5 @@
 <script lang="ts">
-  import Editor from "./components/Editor.svelte";
+  import Editor from "./pages/Editor.svelte";
   let name = "world";
 </script>
 
