@@ -1,11 +1,17 @@
 <script lang="ts">
-  import Editor from "./pages/Editor.svelte";
-  let name = "world";
+  import NoticeEditor from "./pages/NoticeEditor.svelte";
 </script>
 
-<div>
-  <Editor></Editor>
+<div class="app">
+  <div class="container">
+    <NoticeEditor></NoticeEditor>
+  </div>
 </div>
 
 <style lang="scss">
+  .container {
+    margin: auto;
+    max-width: 1700px;
+    padding: 20px;
+  }
 </style>
