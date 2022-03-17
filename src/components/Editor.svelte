@@ -9,7 +9,9 @@
       modules: {
         toolbar: [
           [{ header: [1, 2, 3, false] }],
-          [{ font: ['sans serif', ''] }],
+          // [{ font: ['Poppins', 'Noto Sans'] }],
+          [{color: ['#000', '#e80000', '#00b81c', '#008cff', '#fcc603']}],
+          [{background: ['#fff', '#ffb3b3', '#7dffb1', '#70deff', '#feffa6']}],
           ["bold", "italic", "underline", "strike"],
           ["link"/*, "code-block"*/],
         ],

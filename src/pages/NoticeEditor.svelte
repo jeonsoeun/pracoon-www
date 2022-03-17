@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import EditorConverter from "../components/EditorConverter.svelte";
 </script>
 
