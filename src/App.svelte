@@ -1,12 +1,21 @@
 <script lang="ts">
-  import NoticeEditor from "./pages/NoticeEditor.svelte";
+  import {Router, Link, Route} from 'svelte-routing';
+  import Home from './routes/Home.svelte';
+  import Editor from './routes/NoticeEditor.svelte'
 </script>
 
+<Router>
 <div class="app">
-  <div class="container">
-    <NoticeEditor></NoticeEditor>
+  <div class="links">
+    <Link to="/">Home</Link>
+    <Link to="/editor">Editor</Link>
   </div>
-</div>
+  <div class="container">
+    <Route path="/editor" component="{Editor}"/>
+    <Route path="/" component="{Home}"/>
+    </div>
+  </div>
+</Router>
 
 <style lang="scss">
   .container {
