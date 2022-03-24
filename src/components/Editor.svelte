@@ -10,6 +10,7 @@
         toolbar: [
           [{ header: [1, 2, 3, false] }],
           // [{ font: ['Poppins', 'Noto Sans'] }],
+          [{ size: ['10', '11', '12'] }],
           [{color: ['#000', '#e80000', '#00b81c', '#008cff', '#fcc603']}],
           [{background: ['#fff', '#ffb3b3', '#7dffb1', '#70deff', '#feffa6']}],
           ["bold", "italic", "underline", "strike"],
