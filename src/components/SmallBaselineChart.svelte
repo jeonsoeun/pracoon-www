@@ -80,10 +80,9 @@
     ]
     const fromStr = data.length >= 10 ? data[data.length - 10].time : data[0].time;
     const toStr = data.length > 0 ? data[data.length - 1].time : (new Date()).toUtcString();
-    console.log(fromStr, toStr)
+    // 이게 지나가면 data의 time 양식이 {year, day, month }로 바뀐다. 그래서 이것보다 위에서 fromStr, toStr 데이터를 만듦.
     baselineSeries.setData(data);
     // 그래프를 어디서 부터 어디까지 보여줄지 설정. 가장 최근부터 10일(240시간) 보여주기
-    console.log(fromStr,toStr)
     chart.timeScale().setVisibleRange({
       from: (new Date(fromStr)).getTime()/1000,
       to: (new Date(toStr)).getTime()/1000
