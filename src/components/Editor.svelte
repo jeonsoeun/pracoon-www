@@ -24,7 +24,7 @@
           [{ color: [] }],
           [{ background: [] }],
           ["bold", "italic", "underline", "strike"],
-          ["link" /*, "code-block"*/, "clipboard"],
+          ["link" /*, "code-block"*/],
         ],
       },
       placeholder: "내용을 적어주세요",
