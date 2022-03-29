@@ -4,7 +4,7 @@
 const aws = require("aws-sdk");
 
 exports.handler = async (event, context, callback) => {
-  const BUCKET_NAME = "pracoon-www";
+  const BUCKET_NAME = ""; /** TODO:버킷이름 추가 */
   let { request } = event.Records[0].cf;
   const { uri } = request || {};
   const s3 = new aws.S3({
@@ -65,31 +65,37 @@ exports.handler = async (event, context, callback) => {
         const rootHtmlStr = rootHtmlObj?.Body.toString("utf-8");
         let newHtmlStr = rootHtmlStr;
         if (config["og:image"]) {
-          newHtmlStr = newHtmlStr.replace(
-            /(?<=<meta property=\"og:image\" content=\"https:\/\/\S+)\/\S+?(?=\")/,
-            config["og:image"]
-          ).replace(
-            /(?<=<meta name=\"twitter:image\" content=\"https:\/\/\S+)\/\S+?(?=\")/,
-            config["og:image"]
-          );
+          newHtmlStr = newHtmlStr
+            .replace(
+              /(?<=<meta property=\"og:image\" content=\"https:\/\/\S+)\/\S+?(?=\")/,
+              config["og:image"]
+            )
+            .replace(
+              /(?<=<meta name=\"twitter:image\" content=\"https:\/\/\S+)\/\S+?(?=\")/,
+              config["og:image"]
+            );
         }
         if (config["og:title"]) {
-          newHtmlStr = newHtmlStr.replace(
-            /(?<=<meta property=\"og:title\" content=\").+?(?=\")/,
-            config["og:title"]
-          ).replace(
-            /(?<=<meta name=\"twitter:title\" content=\").+?(?=\")/,
-            config["og:title"]
-          );
+          newHtmlStr = newHtmlStr
+            .replace(
+              /(?<=<meta property=\"og:title\" content=\").+?(?=\")/,
+              config["og:title"]
+            )
+            .replace(
+              /(?<=<meta name=\"twitter:title\" content=\").+?(?=\")/,
+              config["og:title"]
+            );
         }
         if (config["og:description"]) {
-          newHtmlStr = newHtmlStr.replace(
-            /(?<=<meta property=\"og:description\" content=\").+?(?=\")/,
-            config["og:description"]
-          ).replace(
-            /(?<=<meta name=\"twitter:description\" content=\").+?(?=\")/,
-            config["og:description"]
-          );
+          newHtmlStr = newHtmlStr
+            .replace(
+              /(?<=<meta property=\"og:description\" content=\").+?(?=\")/,
+              config["og:description"]
+            )
+            .replace(
+              /(?<=<meta name=\"twitter:description\" content=\").+?(?=\")/,
+              config["og:description"]
+            );
         }
         if (config["og:url"]) {
           newHtmlStr = newHtmlStr.replace(
@@ -103,7 +109,7 @@ exports.handler = async (event, context, callback) => {
             config["title"]
           );
         }
-        console.log('NEW HTML CREATED')
+        console.log("NEW HTML CREATED");
         return {
           status: 200,
           statusCode: 200,
@@ -118,10 +124,10 @@ exports.handler = async (event, context, callback) => {
           },
         };
       } else {
-        console.log('NO ROOT HTML')
+        console.log("NO ROOT HTML");
       }
     } else {
-      console.log('ogConfig.json NOT EXIST')
+      console.log("ogConfig.json NOT EXIST");
     }
   }
   callback(null, request);

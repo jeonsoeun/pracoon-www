@@ -3,7 +3,7 @@
 const aws = require("aws-sdk");
 
 exports.handler = async (event, context, callback) => {
-  const BUCKET_NAME = "pracoon-www";
+  const BUCKET_NAME = ""; /** TODO:버킷이름 추가 */
   let { request } = event.Records[0].cf;
   const { uri, headers } = request || {};
   // 크롤러인지 검사.
@@ -11,7 +11,7 @@ exports.handler = async (event, context, callback) => {
   if ("is-crawler" in headers) {
     is_crawler = headers["is-crawler"][0].value.toLowerCase();
   }
-  console.log('is_crawler:'+is_crawler)
+  console.log("is_crawler:" + is_crawler);
   if (is_crawler === "true") {
     const s3 = new aws.S3({
       region: "ap-northeast-2",

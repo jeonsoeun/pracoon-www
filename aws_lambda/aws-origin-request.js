@@ -3,7 +3,7 @@
 const aws = require("aws-sdk");
 
 exports.handler = async (event, context, callback) => {
-  const BUCKET_NAME = "pracoon-www";
+  const BUCKET_NAME = ""; /** TODO:버킷이름 추가 */
   let { request } = event.Records[0].cf;
   const { uri, headers } = request || {};
   // 이벤트 페이지 인지 검사.

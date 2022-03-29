@@ -1,109 +1,38 @@
-*Psst �looking for a more complete solution? Check out [SvelteKit](https://kit.svelte.dev), the official framework for building web applications of all sizes, with a beautiful development experience and flexible filesystem-based routing.*
+# pracoon-www
 
-*Looking for a shareable component template instead? You can [use SvelteKit for that as well](https://kit.svelte.dev/docs#packaging) or the older [sveltejs/component-template](https://github.com/sveltejs/component-template)*
+테스팅용 웹페이지. [svelte](https://svelte.dev/)로 제작되었다.
 
----
-
-# svelte app
-
-This is a project template for [Svelte](https://svelte.dev) apps. It lives at https://github.com/sveltejs/template.
-
-To create a new project based on this template using [degit](https://github.com/Rich-Harris/degit):
-
-```bash
-npx degit sveltejs/template svelte-app
-cd svelte-app
-```
-
-*Note that you will need to have [Node.js](https://nodejs.org) installed.*
-
-
-## Get started
-
-Install the dependencies...
-
-```bash
-cd svelte-app
-npm install
-```
-
-...then start [Rollup](https://rollupjs.org):
+## 실행
+#### [Rollup](https://rollupjs.org)으로 실행(개발용):
 
 ```bash
 npm run dev
 ```
+#### SPA(single-page-app) mode(확인용):
+``` bash
+npm run start
+```
 
-Navigate to [localhost:8080](http://localhost:8080). You should see your app running. Edit a component file in `src`, save it, and reload the page to see your changes.
-
-By default, the server will only respond to requests from localhost. To allow connections from other computers, edit the `sirv` commands in package.json to include the option `--host 0.0.0.0`.
-
-If you're using [Visual Studio Code](https://code.visualstudio.com/) we recommend installing the official extension [Svelte for VS Code](https://marketplace.visualstudio.com/items?itemName=svelte.svelte-vscode). If you are using other editors you may need to install a plugin in order to get syntax highlighting and intellisense.
-
-## Building and running in production mode
-
-To create an optimised version of the app:
-
-```bash
+## 빌드
+``` bash
 npm run build
 ```
 
-You can run the newly built app with `npm run start`. This uses [sirv](https://github.com/lukeed/sirv), which is included in your package.json's `dependencies` so that the app will work when you deploy to platforms like [Heroku](https://heroku.com).
+## 페이지 구조
+### home
+경로: `/`  
+홈화면. 아직 아무것도 없음.
+### editor
+경로: `/editor`  
+[Quill](https://quilljs.com/) Editor를 테스트해본 페이지. 구글 Docs에서 복사했을때 스타일이 유지되도록 했다.
+추후에 이미지를 넣었을때 이미지를 base64로 변환해서 인라인으로 붙이는 작업을 해볼 예정이다.
+
+### chart
+경로: `/chart`
+[LightweightChart](https://tradingview.github.io/lightweight-charts/) 를 이용해서 "baseline chart"와 "candlebar chart"를 테스트해보았다.  
+baseline chart는 작고 가로축, 세로축, 배경격자무늬를 다 가리고 두께를 줄여서 화면 상단부에 작게 들어가기 좋게 만들었다.  
+candlebar chart는 데이터 양식이 어떻게 들어가는지만 테스트했다.
 
 
-## Single-page app mode
-
-By default, sirv will only respond to requests that match files in `public`. This is to maximise compatibility with static fileservers, allowing you to deploy your app anywhere.
-
-If you're building a single-page app (SPA) with multiple routes, sirv needs to be able to respond to requests for *any* path. You can make it so by editing the `"start"` command in package.json:
-
-```js
-"start": "sirv public --single"
-```
-
-## Using TypeScript
-
-This template comes with a script to set up a TypeScript development environment, you can run it immediately after cloning the template with:
-
-```bash
-node scripts/setupTypeScript.js
-```
-
-Or remove the script via:
-
-```bash
-rm scripts/setupTypeScript.js
-```
-
-If you want to use `baseUrl` or `path` aliases within your `tsconfig`, you need to set up `@rollup/plugin-alias` to tell Rollup to resolve the aliases. For more info, see [this StackOverflow question](https://stackoverflow.com/questions/63427935/setup-tsconfig-path-in-svelte).
-
-## Deploying to the web
-
-### With [Vercel](https://vercel.com)
-
-Install `vercel` if you haven't already:
-
-```bash
-npm install -g vercel
-```
-
-Then, from within your project folder:
-
-```bash
-cd public
-vercel deploy --name my-project
-```
-
-### With [surge](https://surge.sh/)
-
-Install `surge` if you haven't already:
-
-```bash
-npm install -g surge
-```
-
-Then, from within your project folder:
-
-```bash
-npm run build
-surge public my-project.surge.sh
-```
+### svelte로 제작한 이유?
+회사 admin tool이 svelte로 제작되어 있다했는데, 해당 코드를 바로 손댈 수 없어서 체험해보려고 만들었다.

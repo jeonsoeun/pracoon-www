@@ -10,9 +10,9 @@
   "author": "jse52595@gmail.com",
   "license": "ISC",
   "scripts": {
-    "dev1": "rollup -c -w",
+    "dev": "rollup -c -w",
     "build": "rollup -c",
-    "dev": "sirv public --dev --single",
+    "dev-spa": "sirv public --dev --single",
     "start": "sirv public --no-clear --single",
     "check": "svelte-check --tsconfig ./tsconfig.json"
   },
