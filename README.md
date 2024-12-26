@@ -1,5 +1,7 @@
 # pracoon-www
 
+주소: https://d2ea53l1kq1p10.cloudfront.net/editor
+
 테스팅용 웹페이지. [svelte](https://svelte.dev/)로 제작되었다.
 
 ## 실행
