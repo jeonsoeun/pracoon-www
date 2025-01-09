@@ -1,6 +1,6 @@
 <script>
-  import CandlestickChart from "../components/CandlestickChart.svelte";
-  import SmallBaselineChart from "../components/SmallBaselineChart.svelte";
+  import CandlestickChart from "../../components/CandlestickChart.svelte";
+  import SmallBaselineChart from "../../components/SmallBaselineChart.svelte";
 </script>
 
 <div class="chart-container">
@@ -10,7 +10,7 @@
   <CandlestickChart id="line-chart"/>
 </div>
 
-<style lang="scss">
+<!-- <style lang="scss">
   .chart-container {
     padding: 20px;
     min-width: 1000px;
@@ -20,4 +20,4 @@
     width: 200px;
     height: 130px;
   }
-</style>
+</style> -->
