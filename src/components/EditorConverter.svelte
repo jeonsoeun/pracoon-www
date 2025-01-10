@@ -1,50 +1,35 @@
 <script lang="ts">
   import Editor from "./Editor.svelte";
-  export let id: string = "";
-
-  let htmlPreviewCtxRef: HTMLDivElement = null;
+  let {id = 'editor'}: {id: string } = $props();
+  let htmlPreviewCtxRef: HTMLDivElement | null = null;
 
   const onClickConvertHtml = () => {
     // editor에 적은 내용 하단 privew에 추가.
-    const editorEl = document.getElementById(id).querySelector(".ql-editor");
+    const editorEl = document?.getElementById(id)?.querySelector(".ql-editor");
+    if(!editorEl) return;
     const htmlStr = editorEl.innerHTML;
+    if(!htmlPreviewCtxRef) return;
     htmlPreviewCtxRef.innerText = htmlStr;
   };
 </script>
 
-<div class="editor-convert">
-  <input class="title-input" placeholder="제목" />
+<div class="editor-convert flex-1">
+  <input class="w-full p-[10px] box-border mb-5" placeholder="제목" />
   <Editor {id} />
-  <div class="button-wrapper">
-    <button on:click={onClickConvertHtml}> Convert to HTML </button>
+  <div class="p-[10px] pb-0">
+    <button onclick={onClickConvertHtml}> Convert to HTML </button>
   </div>
-  <div class="html-preview" >
-    <div class="html-preview__content" bind:this={htmlPreviewCtxRef}/>
+  <div class="html-preview p-5 border border-solid border-[#ddd]" >
+    <div class="html-preview__content" bind:this={htmlPreviewCtxRef}></div>
   </div>
 </div>
 
-<style lang="scss">
-  .editor-convert {
-    flex-grow: 1;
-    :global(.ql-editor) {
+<!-- <style>
+   .editor-convert .ql-editor {
       height: 200px;
     }
-  }
-  .button-wrapper {
-    padding: 10px 10px 10px 0;
-  }
-  .html-preview {
-    padding: 20px;
-    border: 1px solid #ddd;
-    :global(*) {
+  .html-preview *  {
       padding: 0;
       margin: 0;
-    }
   }
-  .title-input {
-    width: 100%;
-    padding: 10px;
-    box-sizing: border-box;
-    margin-bottom: 20px;
-  }
-</style>
+ </style> -->

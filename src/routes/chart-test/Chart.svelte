@@ -3,21 +3,9 @@
   import SmallBaselineChart from "../../components/SmallBaselineChart.svelte";
 </script>
 
-<div class="chart-container">
-  <div class="small-chart-container">
+<div class="p-5 min-w-[1000px] h-[500px]">
+  <div class="w-[200px] h-[130px]">
     <SmallBaselineChart id="baseline-chart"/>
   </div>
   <CandlestickChart id="line-chart"/>
 </div>
-
-<!-- <style lang="scss">
-  .chart-container {
-    padding: 20px;
-    min-width: 1000px;
-    height: 500px;
-  }
-  .small-chart-container{
-    width: 200px;
-    height: 130px;
-  }
-</style> -->

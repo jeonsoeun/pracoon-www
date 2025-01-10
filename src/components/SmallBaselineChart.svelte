@@ -1,15 +1,18 @@
-<script>
+<script lang="ts">
+	import type { IChartApi, UTCTimestamp } from "lightweight-charts";
   import { createChart } from "lightweight-charts";
   import { onMount } from "svelte";
   export let id = "";
 
-  const resize = (chart) => {
+  const resize = (chart:IChartApi) => {
     if (window.requestAnimationFrame) {
       window.requestAnimationFrame(() => {
         const chartBoxEl = document.querySelector(`#${id}`);
+        if(chartBoxEl){
         const width = chartBoxEl.clientWidth;
         const height = chartBoxEl.clientHeight;
         chart.resize(width, height, true);
+        }
       });
     }
   };
@@ -18,9 +21,6 @@
     const chart = createChart(id);
     chart.applyOptions({
       timeScale: {
-        visible: false,
-      },
-      priceScale: {
         visible: false,
       },
       grid: {
@@ -131,24 +131,17 @@
     const fromStr =
       data.length >= 10 ? data[data.length - DATA_NUM].time : data[0].time;
     const toStr =
-      data.length > 0 ? data[data.length - 1].time : new Date().toUtcString();
+      data.length > 0 ? data[data.length - 1].time : new Date().toUTCString();
     // 이게 지나가면 data의 time 양식이 {year, day, month }로 바뀐다. 그래서 이것보다 위에서 fromStr, toStr 데이터를 만듦.
     baselineSeries.setData(data);
     // 그래프를 어디서 부터 어디까지 보여줄지 설정. 가장 최근부터 10일(240시간) 보여주기
     chart.timeScale().setVisibleRange({
-      from: new Date(fromStr).getTime() / 1000,
-      to: new Date(toStr).getTime() / 1000,
+      from: new Date(fromStr).getTime() / 1000 as UTCTimestamp,
+      to: new Date(toStr).getTime() / 1000 as UTCTimestamp,
     });
     // 차트가 부모 박스 크기에 맞게 사이즈가 조정되기 때문에 이후에 부모 박스 크기가 바꾸면 다시 그려주도록 해야 사이즈 조절이 된다.
     window.addEventListener("resize", () => resize(chart));
   });
 </script>
 
-<div {id} class="chart" />
-
-<style lang="scss">
-  .chart {
-    width: 100%;
-    height: 100%;
-  }
-</style>
+<div {id} class="w-full h-full" ></div>

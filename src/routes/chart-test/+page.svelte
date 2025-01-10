@@ -3,5 +3,6 @@
 
 </script>
 <div>
+  CHART
   <Chart/>
 </div>
