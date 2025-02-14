@@ -4,6 +4,7 @@ import type { DiaryList, DiaryListItem } from './$types.js';
 
 export const load = async () => {
 	const diaryPath = path.resolve('src/data/diary-md'); // 디렉터리 경로
+	console.log(diaryPath);
 	const indexFile = fs.readdirSync(diaryPath).find((file) => file.endsWith('index.json'));
 	const files = fs.readdirSync(diaryPath).filter((file) => file.endsWith('.md')); // .md 파일 필터링
 
@@ -46,6 +47,5 @@ export const load = async () => {
 
 		return newItem;
 	});
-
-	return posts;
+	return { posts };
 };
