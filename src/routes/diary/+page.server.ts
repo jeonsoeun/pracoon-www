@@ -11,6 +11,8 @@ export const load = async () => {
 		? (JSON.parse(fs.readFileSync(path.join(diaryPath, indexFile), 'utf-8')) as DiaryList)
 		: ({ posts: [] } as DiaryList);
 
+	// 파일 작성
+
 	const posts: DiaryListItem[] = files.reverse().map((file) => {
 		const filePath = path.join(diaryPath, file);
 		const content = fs.readFileSync(filePath, 'utf-8'); // 파일 읽기
@@ -41,9 +43,9 @@ export const load = async () => {
 			editDate: editedDate,
 			date
 		};
+
+		return newItem;
 	});
 
-	return {
-		posts
-	};
+	return posts;
 };
