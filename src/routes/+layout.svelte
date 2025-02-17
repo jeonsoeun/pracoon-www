@@ -7,7 +7,5 @@
 
 <div class="w-full min-h-dvh flex">
 	<SideNavigator/>
-	<div>
-		{@render children()}
-	</div>
+	{@render children()}
 </div>

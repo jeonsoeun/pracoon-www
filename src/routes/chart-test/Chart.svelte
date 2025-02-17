@@ -1,11 +1,6 @@
 <script>
   import CandlestickChart from "../../components/CandlestickChart.svelte";
-  import SmallBaselineChart from "../../components/SmallBaselineChart.svelte";
 </script>
-
-<div class="p-5 min-w-[1000px] h-[500px]">
-  <div class="w-[200px] h-[130px]">
-    <SmallBaselineChart id="baseline-chart"/>
-  </div>
+<div class="flex w-full min-w-full h-[500px]">
   <CandlestickChart id="line-chart"/>
 </div>

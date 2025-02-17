@@ -2,7 +2,9 @@
   import Chart from "./Chart.svelte";
 
 </script>
-<div>
+<div class="w-full ">
   CHART
-  <Chart/>
+  <div>
+    <Chart/>
+  </div>
 </div>
