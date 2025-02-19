@@ -6,6 +6,6 @@
 </script>
 
 <div class="w-full min-h-dvh flex">
-	<SideNavigator/>
+	<!-- <SideNavigator/> -->
 	{@render children()}
 </div>

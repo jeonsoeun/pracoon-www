@@ -1,7 +1,7 @@
 <script lang='ts'>
   import { onMount } from "svelte";
-	import { displayCandleChart, type CandleChartItem } from "../util/chart/candleChart.js";
 	import { createChart,type ISeriesApi, type Time } from "lightweight-charts";
+  import type { CandleChartItem } from "../types/chart.js";
   interface Props {
     id: string;
     chartData: CandleChartItem[];

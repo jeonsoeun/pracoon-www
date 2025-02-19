@@ -1,5 +1,5 @@
 <script>
-  import Chart from "./Chart.svelte";
+  import Chart from "../../components/Chart.svelte";
 
 </script>
 <div class="w-full ">
