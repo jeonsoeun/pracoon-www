@@ -14,6 +14,7 @@
 	import { calculateFluidSMCLite } from '../util/chart/calculateFluidSmcLite.js';
 	import { type BandData, BandsIndicator } from '../util/chart/BandIndicatorPlugin.js';
 	import { type BoxData, BoxIndicator } from '../util/chart/BoxIndicatorPlugin.js';
+	import { LabelIndicator, type LabelData } from '../util/chart/LabelPlugin.js';
 
 	const chartId = 'chart';
 
@@ -29,6 +30,7 @@
 	let fluidSmcLiteZigZagColor = $state<string>('rgba(252, 186, 3, 0.5)');
 	let fluidSmcLiteSupplyBoxIndicator = $state<BoxIndicator>();
 	let fluidSmcLiteDemandBoxIndicator = $state<BoxIndicator>();
+	let fluidSmcLiteBosIndicator = $state<LabelIndicator>();
 	let chartMain = $state<IChartApi | undefined>(undefined);
 
 	onMount(() => {
@@ -90,8 +92,13 @@
 			fillColor: fluidSmcLiteDemandColor,
 			lineColor: 'rgba(0,0,0,0)'
 		});
+		fluidSmcLiteBosIndicator = new LabelIndicator({
+			textColor: 'rgba(0,0,0,0.5)',
+			fontSize: 12
+		});
 		fluidSmcLiteZigZagSeries.attachPrimitive(fluidSmcLiteSupplyBoxIndicator);
 		fluidSmcLiteZigZagSeries.attachPrimitive(fluidSmcLiteDemandBoxIndicator);
+		fluidSmcLiteZigZagSeries.attachPrimitive(fluidSmcLiteBosIndicator);
 
 		// // 차트 클릭하면 좌표 알려줘
 		// const canvas = chartMain?.chartElement().getElementsByTagName('canvas')?.[0];
@@ -131,10 +138,9 @@
 				const supplyData: BoxData[] = smcLite.supplyZones
 					.filter((v) => !v.bos && !v.isOverlapping)
 					.map((v) => {
-						console.log(v);
 						return {
 							startTime: v.time,
-							endTime: (v.time + 60 * 60 * 24 * 1000000000) as UTCTimestamp,
+							endTime: Infinity as UTCTimestamp,
 							top: v.boxTop,
 							bottom: v.boxBottom
 						};
@@ -144,13 +150,24 @@
 					.map((v) => {
 						return {
 							startTime: v.time,
-							endTime: (v.time + 60 * 60 * 24 * 50) as UTCTimestamp,
+							endTime: Infinity as UTCTimestamp,
 							top: v.boxTop,
 							bottom: v.boxBottom
 						};
 					});
+				const bosList: LabelData[] = smcLite.supplyZones
+					.concat(smcLite.demandZones)
+					.filter((v) => v.bos)
+					.map((v) => {
+						return {
+							time: v.time,
+							price: v.swingValue,
+							text: 'BOS'
+						};
+					});
 				fluidSmcLiteSupplyBoxIndicator?.setBoxesData(supplyData);
 				fluidSmcLiteDemandBoxIndicator?.setBoxesData(demandData);
+				fluidSmcLiteBosIndicator?.setLabelsData(bosList);
 			}
 		}
 	});

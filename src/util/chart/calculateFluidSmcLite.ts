@@ -83,20 +83,47 @@ function isSwing(
 }
 
 /**
- * 새 영역의 POI(newPoi)가 기존 영역(existingZones) 중 하나와 겹치는지 판단
+ * 새 영역의 POI(newPoi)가 기존 영역(existingZones) 중 하나와 겹치는지 판단하여,
+ * 겹치지 않으면 true (그려도 됨), 겹치면 false (겹쳐서 그리지 않음)을 반환합니다.
  * @param {number} newPoi - 새 영역의 POI
- * @param {Array} existingZones - 기존의 supply 또는 demand 영역 배열 (각 객체에 poi 속성이 있음)
+ * @param {SupplyDemandZone[]} existingZones - 기존의 supply 또는 demand 영역 배열 (각 객체에 poi 속성이 있음)
  * @param {number} atr - 현재 ATR 값
- * @returns {boolean} 겹치면 true, 아니면 false
+ * @returns {boolean} 겹치지 않으면 true, 겹치면 false
  */
-function checkOverlapping(newPoi: number, existingZones: SupplyDemandZone[], atr: number) {
-	const atrThreshold = atr * 2; // 임계치 설정 (예시)
+function checkOverlapping(newPoi: number, existingZones: SupplyDemandZone[], atr: number): boolean {
+	const atrThreshold = atr * 2; // 임계치 설정
 	for (const zone of existingZones) {
-		if (Math.abs(zone.poi - newPoi) <= atrThreshold) {
-			return true;
+		// 기존 영역의 POI ± 임계치 범위 안에 새 POI가 존재하면 겹친 것으로 판단
+		if (newPoi >= zone.poi - atrThreshold && newPoi <= zone.poi + atrThreshold) {
+			return false; // 겹침 => 그려도 안 됨
 		}
 	}
-	return false;
+	return true; // 겹치는 영역이 없으므로 그려도 됨
+}
+
+/**
+ * 주어진 zone에 대해 BOS 조건을 검사하여, 조건을 만족하면 해당 인덱스를 반환합니다.
+ * 공급(zone.type === 'supply')이면, 이후 캔들의 종가가 boxTop 이상이면 BOS,
+ * 수요(zone.type === 'demand')이면, 이후 캔들의 종가가 boxBottom 이하이면 BOS로 판단합니다.
+ * @param {SupplyDemandZone} zone - 공급/수요 영역 정보
+ * @param {CandleChartItem[]} candles - 캔들 데이터 배열 (시간순 오름차순)
+ * @returns {number | null} BOS 조건을 만족한 캔들의 인덱스, 만족하지 않으면 null
+ */
+function checkBOSForZone(zone: SupplyDemandZone, candles: CandleChartItem[]): number | null {
+	for (let i = zone.index + 1; i < candles.length; i++) {
+		if (zone.type === 'supply') {
+			// 공급: 이후 캔들의 종가가 boxTop 이상이면 BOS
+			if (candles[i].close >= zone.boxTop) {
+				return i;
+			}
+		} else if (zone.type === 'demand') {
+			// 수요: 이후 캔들의 종가가 boxBottom 이하이면 BOS
+			if (candles[i].close <= zone.boxBottom) {
+				return i;
+			}
+		}
+	}
+	return null;
 }
 
 /**
@@ -116,7 +143,7 @@ export function calculateFluidSMCLite(
 ) {
 	const swingLength = options.swingLength || 10;
 	const atrPeriod = options.atrPeriod || 50;
-	// const history = options.history || 20;
+	const history = options.history || 20;
 	const boxWidth = options.boxWidth || 2.5; // 비율: ATR에 곱할 값 (boxWidth/10)
 
 	const atrValues = calculateATR(candles, atrPeriod);
@@ -148,7 +175,6 @@ export function calculateFluidSMCLite(
 					boxTop,
 					boxBottom,
 					poi,
-					// break 조건: 이후 캔들 중 종가가 박스 위쪽을 돌파하면 BOS
 					bos: false,
 					breakIndex: null as number | null,
 					time: candles[i].time,
@@ -166,7 +192,7 @@ export function calculateFluidSMCLite(
 				const atrBuffer = atr * (boxWidth / 10);
 				const boxTop = boxBottom + atrBuffer;
 				const poi = (boxTop + boxBottom) / 2;
-				const isOverlapping = checkOverlapping(poi, supplyZones, atr);
+				const isOverlapping = checkOverlapping(poi, demandZones, atr);
 				demandZones.push({
 					type: 'demand',
 					index: i,
@@ -183,11 +209,19 @@ export function calculateFluidSMCLite(
 		}
 	}
 
+	// 오래된 영역 삭제 (history 적용)
+	if (supplyZones.length > history) {
+		supplyZones.splice(0, supplyZones.length - history);
+	}
+	if (demandZones.length > history) {
+		demandZones.splice(0, demandZones.length - history);
+	}
+
 	// BOS 계산: 공급/수요 영역 이후, 가격이 해당 영역을 돌파하는지 체크
 	// 공급(BOS): 이후 캔들의 종가가 supply boxTop을 돌파하면
 	for (const zone of supplyZones) {
 		for (let i = zone.index + 1; i < candles.length; i++) {
-			if (candles[i].close > zone.boxTop) {
+			if (candles[i].close >= zone.boxTop && checkBOSForZone(zone, candles) !== null) {
 				zone.bos = true;
 				zone.breakIndex = i;
 				bos.push({ ...zone });
@@ -198,7 +232,7 @@ export function calculateFluidSMCLite(
 	// 수요(BOS): 이후 캔들의 종가가 demand boxBottom을 하향 돌파하면
 	for (const zone of demandZones) {
 		for (let i = zone.index + 1; i < candles.length; i++) {
-			if (candles[i].close < zone.boxBottom) {
+			if (candles[i].close <= zone.boxBottom && checkBOSForZone(zone, candles) !== null) {
 				zone.bos = true;
 				zone.breakIndex = i;
 				bos.push({ ...zone });

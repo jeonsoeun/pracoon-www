@@ -103,13 +103,17 @@ class BoxIndicatorPaneView implements ISeriesPrimitivePaneView {
 		const timeScale = this._source.chart.timeScale();
 		// BoxData 배열의 각 항목을 캔버스 좌표로 변환
 		this._viewData.data = this._source._boxesData.map((boxData) => {
+			const x2Parsed =
+				boxData.endTime === Infinity
+					? timeScale.width()
+					: timeScale.timeToCoordinate(boxData.endTime);
 			const parsed = {
 				x1: timeScale.timeToCoordinate(boxData.startTime) ?? -100,
-				x2: timeScale.timeToCoordinate(boxData.endTime) ?? -100,
+				x2: x2Parsed ?? -100,
 				y1: series.priceToCoordinate(boxData.top) ?? -100,
 				y2: series.priceToCoordinate(boxData.bottom) ?? -100
 			};
-			console.log(boxData, parsed);
+			// console.log(boxData, parsed);
 
 			return parsed;
 		});
