@@ -118,7 +118,8 @@ export function calculateFluidSMCLite(
 					poi,
 					// break 조건: 이후 캔들 중 종가가 박스 위쪽을 돌파하면 BOS
 					bos: false,
-					breakIndex: null as number | null
+					breakIndex: null as number | null,
+					time: candles[i].time
 				});
 			}
 		}
@@ -140,7 +141,8 @@ export function calculateFluidSMCLite(
 					boxBottom,
 					poi,
 					bos: false,
-					breakIndex: null as number | null
+					breakIndex: null as number | null,
+					time: candles[i].time
 				});
 			}
 		}
