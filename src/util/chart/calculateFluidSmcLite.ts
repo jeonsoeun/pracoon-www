@@ -3,7 +3,21 @@
  * 캔들 데이터 형식: { openTime, closeTime, open, close, high, low }
  */
 
+import type { UTCTimestamp } from 'lightweight-charts';
 import type { CandleChartItem } from '../../types/chart.js';
+
+interface SupplyDemandZone {
+	type: 'supply' | 'demand';
+	index: number;
+	swingValue: number;
+	boxTop: number;
+	boxBottom: number;
+	poi: number;
+	bos: boolean;
+	breakIndex: number | null;
+	time: UTCTimestamp;
+	isOverlapping: boolean;
+}
 
 /**
  * ATR(평균 실제 범위)을 계산하는 함수 (단순 SMA 방식)
@@ -69,6 +83,23 @@ function isSwing(
 }
 
 /**
+ * 새 영역의 POI(newPoi)가 기존 영역(existingZones) 중 하나와 겹치는지 판단
+ * @param {number} newPoi - 새 영역의 POI
+ * @param {Array} existingZones - 기존의 supply 또는 demand 영역 배열 (각 객체에 poi 속성이 있음)
+ * @param {number} atr - 현재 ATR 값
+ * @returns {boolean} 겹치면 true, 아니면 false
+ */
+function checkOverlapping(newPoi: number, existingZones: SupplyDemandZone[], atr: number) {
+	const atrThreshold = atr * 2; // 임계치 설정 (예시)
+	for (const zone of existingZones) {
+		if (Math.abs(zone.poi - newPoi) <= atrThreshold) {
+			return true;
+		}
+	}
+	return false;
+}
+
+/**
  * Fluid SMC Lite 계산 함수
  * @param {Array} candles - 캔들 데이터 배열 (시간순 오름차순)
  * @param {Object} options - 설정값 (swingLength, atrPeriod, history, boxWidth)
@@ -92,8 +123,8 @@ export function calculateFluidSMCLite(
 
 	const swingHighs = [];
 	const swingLows = [];
-	const supplyZones = [];
-	const demandZones = [];
+	const supplyZones: SupplyDemandZone[] = [];
+	const demandZones: SupplyDemandZone[] = [];
 	const bos = []; // Break Of Structure zones
 
 	// 스윙 포인트 및 영역 계산 (초기 단순 구현)
@@ -101,7 +132,7 @@ export function calculateFluidSMCLite(
 	for (let i = swingLength; i < candles.length - swingLength; i++) {
 		// 스윙 하이 체크
 		if (isSwing(candles, i, swingLength, 'high')) {
-			swingHighs.push({ index: i, value: candles[i].high });
+			swingHighs.push({ index: i, value: candles[i].high, type: 'high' });
 			const atr = atrValues[i];
 			if (atr !== null) {
 				// 공급(상승 압력) 영역: 스윙 하이를 기준으로 박스 아래쪽
@@ -109,6 +140,7 @@ export function calculateFluidSMCLite(
 				const atrBuffer = atr * (boxWidth / 10);
 				const boxBottom = boxTop - atrBuffer;
 				const poi = (boxTop + boxBottom) / 2;
+				const isOverlapping = checkOverlapping(poi, supplyZones, atr);
 				supplyZones.push({
 					type: 'supply',
 					index: i,
@@ -119,13 +151,14 @@ export function calculateFluidSMCLite(
 					// break 조건: 이후 캔들 중 종가가 박스 위쪽을 돌파하면 BOS
 					bos: false,
 					breakIndex: null as number | null,
-					time: candles[i].time
+					time: candles[i].time,
+					isOverlapping: isOverlapping
 				});
 			}
 		}
 		// 스윙 로우 체크
 		if (isSwing(candles, i, swingLength, 'low')) {
-			swingLows.push({ index: i, value: candles[i].low });
+			swingLows.push({ index: i, value: candles[i].low, type: 'low' });
 			const atr = atrValues[i];
 			if (atr !== null) {
 				// 수요(하락 압력) 영역: 스윙 로우를 기준으로 박스 위쪽
@@ -133,6 +166,7 @@ export function calculateFluidSMCLite(
 				const atrBuffer = atr * (boxWidth / 10);
 				const boxTop = boxBottom + atrBuffer;
 				const poi = (boxTop + boxBottom) / 2;
+				const isOverlapping = checkOverlapping(poi, supplyZones, atr);
 				demandZones.push({
 					type: 'demand',
 					index: i,
@@ -142,7 +176,8 @@ export function calculateFluidSMCLite(
 					poi,
 					bos: false,
 					breakIndex: null as number | null,
-					time: candles[i].time
+					time: candles[i].time,
+					isOverlapping: isOverlapping
 				});
 			}
 		}
@@ -172,9 +207,31 @@ export function calculateFluidSMCLite(
 		}
 	}
 
+	const zigZag: { value: number; time: UTCTimestamp; type: string }[] = [];
+	const swingHighsLowsMerged = swingHighs.concat(swingLows).sort((a, b) => a.index - b.index);
+
+	swingHighsLowsMerged.forEach((v, i) => {
+		if (i === 0 || v.type !== zigZag[zigZag.length - 1].type) {
+			zigZag.push({ time: candles[v.index].time, value: v.value, type: v.type });
+		} else {
+			if (v.type === 'high') {
+				if (v.value > zigZag[zigZag.length - 1].value) {
+					zigZag.pop();
+					zigZag.push({ time: candles[v.index].time, value: v.value, type: v.type });
+				}
+			} else {
+				if (v.value < zigZag[zigZag.length - 1].value) {
+					zigZag.pop();
+					zigZag.push({ time: candles[v.index].time, value: v.value, type: v.type });
+				}
+			}
+		}
+	});
+
 	return {
 		swingHighs,
 		swingLows,
+		zigZag,
 		supplyZones,
 		demandZones,
 		bos

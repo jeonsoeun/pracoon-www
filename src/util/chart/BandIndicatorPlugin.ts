@@ -1,5 +1,5 @@
 import { CanvasRenderingTarget2D } from 'fancy-canvas';
-import {
+import type {
 	Coordinate,
 	ISeriesPrimitive,
 	ISeriesPrimitivePaneRenderer,

@@ -11,8 +11,6 @@
 		"strict": true,
 		"module": "NodeNext",
 		"moduleResolution": "NodeNext",
-		"preserveSymlinks": true,
-		"verbatimModuleSyntax": false,
 		"baseUrl": ".",
 		"paths": {
 			"fancy-canvas": ["./node_modules/fancy-canvas/canvas-rendering-target.d.ts"]

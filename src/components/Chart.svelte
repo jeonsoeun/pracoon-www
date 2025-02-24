@@ -13,6 +13,7 @@
 	import { calculateBollingerBands } from '../util/chart/calculateBollingerBands.js';
 	import { calculateFluidSMCLite } from '../util/chart/calculateFluidSmcLite.js';
 	import { type BandData, BandsIndicator } from '../util/chart/BandIndicatorPlugin.js';
+	import { type BoxData, BoxIndicator } from '../util/chart/BoxIndicatorPlugin.js';
 
 	const chartId = 'chart';
 
@@ -26,6 +27,8 @@
 	let fluidSmcLiteSupplyColor = $state<string>('rgba(245, 66, 155, 0.5)');
 	let fluidSmcLiteDemandColor = $state<string>('rgba(66, 135, 245, 0.5)');
 	let fluidSmcLiteZigZagColor = $state<string>('rgba(252, 186, 3, 0.5)');
+	let fluidSmcLiteSupplyBoxIndicator = $state<BoxIndicator>();
+	let fluidSmcLiteDemandBoxIndicator = $state<BoxIndicator>();
 	let chartMain = $state<IChartApi | undefined>(undefined);
 
 	onMount(() => {
@@ -79,6 +82,29 @@
 			priceLineVisible: false,
 			crosshairMarkerVisible: false
 		});
+		fluidSmcLiteSupplyBoxIndicator = new BoxIndicator({
+			fillColor: fluidSmcLiteSupplyColor,
+			lineColor: 'rgba(0,0,0,0)'
+		});
+		fluidSmcLiteDemandBoxIndicator = new BoxIndicator({
+			fillColor: fluidSmcLiteDemandColor,
+			lineColor: 'rgba(0,0,0,0)'
+		});
+		fluidSmcLiteZigZagSeries.attachPrimitive(fluidSmcLiteSupplyBoxIndicator);
+		fluidSmcLiteZigZagSeries.attachPrimitive(fluidSmcLiteDemandBoxIndicator);
+
+		// // 차트 클릭하면 좌표 알려줘
+		// const canvas = chartMain?.chartElement().getElementsByTagName('canvas')?.[0];
+		// canvas.addEventListener('click', function (event) {
+		// 	// 캔버스의 위치와 크기를 가져옴
+		// 	const rect = canvas.getBoundingClientRect();
+		// 	// 클릭한 좌표를 캔버스 기준 좌표로 변환
+		// 	const x = event.clientX - rect.left;
+		// 	const y = event.clientY - rect.top;
+
+		// 	// 콘솔에 좌표 출력
+		// 	console.log(`Clicked at: x = ${x}, y = ${y}`);
+		// });
 	});
 
 	$effect(() => {
@@ -99,6 +125,33 @@
 			}
 			// 세팅 Fluid SMC Lite 박스 그리기
 			const smcLite = calculateFluidSMCLite(candleChartData);
+			if (smcLite && fluidSmcLiteZigZagSeries) {
+				fluidSmcLiteZigZagSeries.setData(smcLite.zigZag);
+
+				const supplyData: BoxData[] = smcLite.supplyZones
+					.filter((v) => !v.bos && !v.isOverlapping)
+					.map((v) => {
+						console.log(v);
+						return {
+							startTime: v.time,
+							endTime: (v.time + 60 * 60 * 24 * 1000000000) as UTCTimestamp,
+							top: v.boxTop,
+							bottom: v.boxBottom
+						};
+					});
+				const demandData: BoxData[] = smcLite.demandZones
+					.filter((v) => !v.bos && !v.isOverlapping)
+					.map((v) => {
+						return {
+							startTime: v.time,
+							endTime: (v.time + 60 * 60 * 24 * 50) as UTCTimestamp,
+							top: v.boxTop,
+							bottom: v.boxBottom
+						};
+					});
+				fluidSmcLiteSupplyBoxIndicator?.setBoxesData(supplyData);
+				fluidSmcLiteDemandBoxIndicator?.setBoxesData(demandData);
+			}
 		}
 	});
 </script>
