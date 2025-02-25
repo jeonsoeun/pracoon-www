@@ -40,6 +40,7 @@ class BandsIndicatorPaneRenderer implements ISeriesPrimitivePaneRenderer {
 	draw() {}
 	drawBackground(target: CanvasRenderingTarget2D) {
 		const points = this._viewData.data;
+		if (points.length === 0) return;
 		target.useBitmapCoordinateSpace((scope) => {
 			const ctx = scope.context;
 			ctx.save();
@@ -55,6 +56,7 @@ class BandsIndicatorPaneRenderer implements ISeriesPrimitivePaneRenderer {
 			// 상한선을 따라 이동
 			region.moveTo(points[0].x, points[0].upper);
 			lines.moveTo(points[0].x, points[0].upper);
+
 			for (const point of points) {
 				region.lineTo(point.x, point.upper);
 				lines.lineTo(point.x, point.upper);

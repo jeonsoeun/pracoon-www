@@ -31,6 +31,7 @@
 	let fluidSmcLiteSupplyBoxIndicator = $state<BoxIndicator>();
 	let fluidSmcLiteDemandBoxIndicator = $state<BoxIndicator>();
 	let fluidSmcLiteBosIndicator = $state<LabelIndicator>();
+	let fluidSmcLiteStructureIndicator = $state<LabelIndicator>();
 	let chartMain = $state<IChartApi | undefined>(undefined);
 
 	onMount(() => {
@@ -96,6 +97,10 @@
 			textColor: 'rgba(0,0,0,0.5)',
 			fontSize: 12
 		});
+		fluidSmcLiteStructureIndicator = new LabelIndicator({
+			textColor: 'rgba(0,0,0,0.4)',
+			fontSize: 10
+		});
 		fluidSmcLiteZigZagSeries.attachPrimitive(fluidSmcLiteSupplyBoxIndicator);
 		fluidSmcLiteZigZagSeries.attachPrimitive(fluidSmcLiteDemandBoxIndicator);
 		fluidSmcLiteZigZagSeries.attachPrimitive(fluidSmcLiteBosIndicator);
@@ -117,7 +122,7 @@
 	$effect(() => {
 		if (candleChartData) {
 			if (candleSeries) candleSeries.setData(candleChartData);
-			// 볼린저 밴드 계산
+			// 볼린저 밴드 계산;
 			const bollingerBands = calculateBollingerBands(candleChartData);
 			if (bollingerBands && bollingerSmcBandSeries) {
 				const upperLowerData: BandData[] = bollingerBands.smaData.map((v, i) => {
@@ -131,43 +136,81 @@
 				bollingerBandIndicator?.setBandsData(upperLowerData);
 			}
 			// 세팅 Fluid SMC Lite 박스 그리기
-			const smcLite = calculateFluidSMCLite(candleChartData);
+			const smcLite = calculateFluidSMCLite(candleChartData, {
+				swingLength: 10, // 오리지널과 동일한 값으로 설정
+				atrPeriod: 50,
+				history: 20,
+				boxWidth: 2.5
+			});
+
 			if (smcLite && fluidSmcLiteZigZagSeries) {
+				// ZigZag 라인 데이터 설정
 				fluidSmcLiteZigZagSeries.setData(smcLite.zigZag);
 
+				// 공급 영역 박스 데이터 설정
 				const supplyData: BoxData[] = smcLite.supplyZones
-					.filter((v) => !v.bos && !v.isOverlapping)
+					.filter((v) => !v.bos) // BOS되지 않은 영역만 필터링
 					.map((v) => {
 						return {
 							startTime: v.time,
 							endTime: Infinity as UTCTimestamp,
 							top: v.boxTop,
-							bottom: v.boxBottom
+							bottom: v.boxBottom,
+							borderColor: 'rgba(255, 70, 70, 1)',
+							backgroundColor: 'rgba(255, 70, 70, 0.2)'
 						};
 					});
+
+				// 수요 영역 박스 데이터 설정
 				const demandData: BoxData[] = smcLite.demandZones
-					.filter((v) => !v.bos && !v.isOverlapping)
+					.filter((v) => !v.bos) // BOS되지 않은 영역만 필터링
 					.map((v) => {
 						return {
 							startTime: v.time,
 							endTime: Infinity as UTCTimestamp,
 							top: v.boxTop,
-							bottom: v.boxBottom
+							bottom: v.boxBottom,
+							borderColor: 'rgba(70, 130, 180, 1)',
+							backgroundColor: 'rgba(70, 130, 180, 0.2)'
 						};
 					});
-				const bosList: LabelData[] = smcLite.supplyZones
-					.concat(smcLite.demandZones)
-					.filter((v) => v.bos)
+
+				// BOS 표시 데이터 설정
+				const bosList: LabelData[] = smcLite.supplyBOS.concat(smcLite.demandBOS).map((v) => {
+					return {
+						time: v.time,
+						price: v.swingValue,
+						text: 'BOS'
+					};
+				});
+
+				// 마켓 구조 표시 데이터 설정 (HL, LH, HH, LL)
+				const structureLabels: LabelData[] = smcLite.zigZag
+					.filter(
+						(v) =>
+							v.type.includes('HH') ||
+							v.type.includes('LL') ||
+							v.type.includes('LH') ||
+							v.type.includes('HL')
+					)
 					.map((v) => {
+						// 타입에서 구조 레이블 추출 (HH/LL/LH/HL)
+						const structureType = v.type.split(' ')[1];
 						return {
 							time: v.time,
-							price: v.swingValue,
-							text: 'BOS'
+							price: v.value,
+							text: structureType,
+							color: v.type.includes('HH') || v.type.includes('HL') ? 'green' : 'red'
 						};
 					});
+
+				// 데이터 적용
 				fluidSmcLiteSupplyBoxIndicator?.setBoxesData(supplyData);
 				fluidSmcLiteDemandBoxIndicator?.setBoxesData(demandData);
 				fluidSmcLiteBosIndicator?.setLabelsData(bosList);
+
+				// 마켓 구조 레이블 설정 (새로운 시리즈가 필요할 수 있음)
+				fluidSmcLiteStructureIndicator?.setLabelsData(structureLabels);
 			}
 		}
 	});

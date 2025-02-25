@@ -68,6 +68,7 @@ class LabelIndicatorPaneRenderer implements ISeriesPrimitivePaneRenderer {
 	draw() {}
 	drawBackground(target: CanvasRenderingTarget2D) {
 		const labels = this._viewData.data;
+		if (labels.length === 0) return;
 		target.useBitmapCoordinateSpace((scope) => {
 			const ctx = scope.context;
 			ctx.save();
@@ -133,7 +134,7 @@ export class LabelIndicator extends PluginBase implements ISeriesPrimitive<Time>
 	constructor(options: LabelIndicatorOptions = {}) {
 		super();
 		this._options = { ...defaults, ...options };
-		this._paneViews = [new LabelIndicatorPaneView(this)];
+		this._paneViews = [];
 	}
 
 	// 외부에서 여러 LabelData를 설정

@@ -1,8 +1,3 @@
-/**
- * Fluid SMC Lite 계산 예제
- * 캔들 데이터 형식: { openTime, closeTime, open, close, high, low }
- */
-
 import type { UTCTimestamp } from 'lightweight-charts';
 import type { CandleChartItem } from '../../types/chart.js';
 
@@ -20,16 +15,12 @@ interface SupplyDemandZone {
 }
 
 /**
- * ATR(평균 실제 범위)을 계산하는 함수 (단순 SMA 방식)
- * @param {Array} candles - 캔들 배열
- * @param {number} period - ATR 기간 (기본 50)
- * @returns {Array} 각 캔들에 대한 ATR 값 (인덱스와 동일)
+ * ATR(평균 실제 범위)을 계산하는 함수
  */
 function calculateATR(candles: CandleChartItem[], period = 50) {
 	const atrValues = [];
 	for (let i = 0; i < candles.length; i++) {
 		if (i === 0) {
-			// 첫 캔들은 이전 값이 없으므로 단순 high - low
 			atrValues.push(candles[i].high - candles[i].low);
 		} else {
 			const current = candles[i];
@@ -42,232 +33,271 @@ function calculateATR(candles: CandleChartItem[], period = 50) {
 			atrValues.push(tr);
 		}
 	}
-	// 단순 이동 평균으로 ATR smoothing
+
+	// 지수 이동 평균(EMA)으로 ATR smoothing (원본 Pine 코드와 더 유사하게)
 	const smoothedATR = [];
+	const multiplier = 2 / (period + 1);
+
 	for (let i = 0; i < candles.length; i++) {
-		if (i < period - 1) {
-			smoothedATR.push(null); // 충분한 데이터가 없으면 null
-		} else {
+		if (i === 0) {
+			smoothedATR.push(atrValues[0]);
+		} else if (i < period) {
 			let sum = 0;
-			for (let j = i - period + 1; j <= i; j++) {
+			for (let j = 0; j <= i; j++) {
 				sum += atrValues[j];
 			}
-			smoothedATR.push(sum / period);
+			smoothedATR.push(sum / (i + 1));
+		} else {
+			const prevATR = smoothedATR[i - 1];
+			smoothedATR.push(atrValues[i] * multiplier + prevATR * (1 - multiplier));
 		}
 	}
+
 	return smoothedATR;
 }
 
 /**
- * 캔들 배열에서 주어진 인덱스가 스윙 하이(또는 로우)인지 판단
- * @param {Array} candles - 캔들 배열
- * @param {number} idx - 확인할 인덱스
- * @param {number} swingLength - 좌우 길이
- * @param {string} type - 'high' 또는 'low'
- * @returns {boolean}
+ * Pine Script의 pivothigh/pivotlow 함수와 유사한 구현
  */
-function isSwing(
-	candles: CandleChartItem[],
-	idx: number,
-	swingLength: number,
-	type: 'high' | 'low' = 'high'
-) {
-	const currentValue = type === 'high' ? candles[idx].high : candles[idx].low;
-	for (let j = idx - swingLength; j <= idx + swingLength; j++) {
-		// 인덱스 범위 체크
-		if (j < 0 || j >= candles.length || j === idx) continue;
-		if (type === 'high' && candles[j].high > currentValue) return false;
-		if (type === 'low' && candles[j].low < currentValue) return false;
+function findPivots(candles: CandleChartItem[], length: number) {
+	const swingHighs = [];
+	const swingLows = [];
+
+	// 좌우로 length만큼의 캔들을 비교해야 하므로, 범위를 제한
+	for (let i = length; i < candles.length - length; i++) {
+		let isHigh = true;
+		let isLow = true;
+
+		// 좌우 length 캔들과 비교하여 피봇 포인트인지 확인
+		for (let j = i - length; j <= i + length; j++) {
+			if (j === i) continue; // 자기 자신은 비교하지 않음
+
+			// 범위를 벗어나는 인덱스는 무시
+			if (j < 0 || j >= candles.length) continue;
+
+			// 고점 비교: 주변에 더 높은 고점이 있으면 스윙 하이가 아님
+			if (candles[j].high > candles[i].high) {
+				isHigh = false;
+			}
+
+			// 저점 비교: 주변에 더 낮은 저점이 있으면 스윙 로우가 아님
+			if (candles[j].low < candles[i].low) {
+				isLow = false;
+			}
+		}
+
+		if (isHigh) {
+			swingHighs.push({ index: i, value: candles[i].high });
+		}
+
+		if (isLow) {
+			swingLows.push({ index: i, value: candles[i].low });
+		}
 	}
-	return true;
+
+	return { swingHighs, swingLows };
 }
 
 /**
- * 새 영역의 POI(newPoi)가 기존 영역(existingZones) 중 하나와 겹치는지 판단하여,
- * 겹치지 않으면 true (그려도 됨), 겹치면 false (겹쳐서 그리지 않음)을 반환합니다.
- * @param {number} newPoi - 새 영역의 POI
- * @param {SupplyDemandZone[]} existingZones - 기존의 supply 또는 demand 영역 배열 (각 객체에 poi 속성이 있음)
- * @param {number} atr - 현재 ATR 값
- * @returns {boolean} 겹치지 않으면 true, 겹치면 false
+ * 새 영역의 POI가 기존 영역과 겹치는지 확인
  */
 function checkOverlapping(newPoi: number, existingZones: SupplyDemandZone[], atr: number): boolean {
-	const atrThreshold = atr * 2; // 임계치 설정
+	const atrThreshold = atr * 2;
+
 	for (const zone of existingZones) {
+		// 이미 BOS된 영역은 고려하지 않음 (파인스크립트 버전과 일치)
+		if (zone.bos) continue;
+
 		// 기존 영역의 POI ± 임계치 범위 안에 새 POI가 존재하면 겹친 것으로 판단
 		if (newPoi >= zone.poi - atrThreshold && newPoi <= zone.poi + atrThreshold) {
 			return false; // 겹침 => 그려도 안 됨
 		}
 	}
+
 	return true; // 겹치는 영역이 없으므로 그려도 됨
 }
 
 /**
- * 주어진 zone에 대해 BOS 조건을 검사하여, 조건을 만족하면 해당 인덱스를 반환합니다.
- * 공급(zone.type === 'supply')이면, 이후 캔들의 종가가 boxTop 이상이면 BOS,
- * 수요(zone.type === 'demand')이면, 이후 캔들의 종가가 boxBottom 이하이면 BOS로 판단합니다.
- * @param {SupplyDemandZone} zone - 공급/수요 영역 정보
- * @param {CandleChartItem[]} candles - 캔들 데이터 배열 (시간순 오름차순)
- * @returns {number | null} BOS 조건을 만족한 캔들의 인덱스, 만족하지 않으면 null
+ * 영역의 BOS 상태를 확인
  */
-function checkBOSForZone(zone: SupplyDemandZone, candles: CandleChartItem[]): number | null {
-	for (let i = zone.index + 1; i < candles.length; i++) {
-		if (zone.type === 'supply') {
-			// 공급: 이후 캔들의 종가가 boxTop 이상이면 BOS
-			if (candles[i].close >= zone.boxTop) {
-				return i;
-			}
-		} else if (zone.type === 'demand') {
-			// 수요: 이후 캔들의 종가가 boxBottom 이하이면 BOS
-			if (candles[i].close <= zone.boxBottom) {
-				return i;
+function checkBOSForZones(
+	zones: SupplyDemandZone[],
+	candles: CandleChartItem[],
+	bosZones: SupplyDemandZone[]
+) {
+	// 각 영역에 대해 BOS 상태 확인
+	for (let i = 0; i < zones.length; i++) {
+		const zone = zones[i];
+
+		// 이미 BOS된 영역은 건너뜀
+		if (zone.bos) continue;
+
+		for (let j = zone.index + 1; j < candles.length; j++) {
+			const isBreak =
+				(zone.type === 'supply' && candles[j].close >= zone.boxTop) ||
+				(zone.type === 'demand' && candles[j].close <= zone.boxBottom);
+
+			if (isBreak) {
+				// BOS 발생: 원본 영역의 상태를 변경하고 BOS 배열에 복사
+				zone.bos = true;
+				zone.breakIndex = j;
+
+				// BOS 영역 복사본 생성 및 추가
+				const bosZone = { ...zone };
+				bosZones.push(bosZone);
+
+				break;
 			}
 		}
 	}
-	return null;
 }
 
 /**
- * Fluid SMC Lite 계산 함수
- * @param {Array} candles - 캔들 데이터 배열 (시간순 오름차순)
- * @param {Object} options - 설정값 (swingLength, atrPeriod, history, boxWidth)
- * @returns {Object} 계산 결과: { swingHighs, swingLows, supplyZones, demandZones, bos }
+ * Fluid SMC Lite 계산 및 렌더링 준비 함수
  */
 export function calculateFluidSMCLite(
 	candles: CandleChartItem[],
-	options: { swingLength?: number; atrPeriod?: number; history?: number; boxWidth?: number } = {
-		swingLength: 10,
-		atrPeriod: 50,
-		history: 20,
-		boxWidth: 2.5
-	}
+	options: { swingLength?: number; atrPeriod?: number; history?: number; boxWidth?: number } = {}
 ) {
 	const swingLength = options.swingLength || 10;
 	const atrPeriod = options.atrPeriod || 50;
 	const history = options.history || 20;
-	const boxWidth = options.boxWidth || 2.5; // 비율: ATR에 곱할 값 (boxWidth/10)
+	const boxWidth = options.boxWidth || 2.5;
 
+	// ATR 계산
 	const atrValues = calculateATR(candles, atrPeriod);
 
-	const swingHighs = [];
-	const swingLows = [];
+	// 스윙 포인트 찾기 (Pine의 pivothigh/pivotlow와 동등한 방식으로)
+	const { swingHighs, swingLows } = findPivots(candles, swingLength);
+
+	// 공급/수요 영역 배열 (최대 history 개수만 유지)
 	const supplyZones: SupplyDemandZone[] = [];
 	const demandZones: SupplyDemandZone[] = [];
-	const bos = []; // Break Of Structure zones
+	const supplyBOS: SupplyDemandZone[] = [];
+	const demandBOS: SupplyDemandZone[] = [];
 
-	// 스윙 포인트 및 영역 계산 (초기 단순 구현)
-	// swing point 계산은 충분한 양의 데이터가 있어야 함.
-	for (let i = swingLength; i < candles.length - swingLength; i++) {
-		// 스윙 하이 체크
-		if (isSwing(candles, i, swingLength, 'high')) {
-			swingHighs.push({ index: i, value: candles[i].high, type: 'high' });
-			const atr = atrValues[i];
-			if (atr !== null) {
-				// 공급(상승 압력) 영역: 스윙 하이를 기준으로 박스 아래쪽
-				const boxTop = candles[i].high;
-				const atrBuffer = atr * (boxWidth / 10);
-				const boxBottom = boxTop - atrBuffer;
-				const poi = (boxTop + boxBottom) / 2;
-				const isOverlapping = checkOverlapping(poi, supplyZones, atr);
-				supplyZones.push({
+	// 스윙 하이에서 공급 영역 생성
+	for (const high of swingHighs) {
+		const i = high.index;
+		const atr = atrValues[i];
+
+		if (atr !== null && atr !== undefined) {
+			const boxTop = high.value;
+			const atrBuffer = atr * (boxWidth / 10);
+			const boxBottom = boxTop - atrBuffer;
+			const poi = (boxTop + boxBottom) / 2;
+
+			// 겹치는지 확인
+			const isOverlapping = !checkOverlapping(poi, supplyZones, atr);
+
+			// 겹치지 않는 경우만 추가 (파인스크립트 버전과 일치)
+			if (!isOverlapping) {
+				// 배열 크기 관리: history 개수를 초과하면 가장 오래된 항목 제거
+				if (supplyZones.length >= history) {
+					supplyZones.pop(); // 가장 오래된 항목 제거 (배열 끝)
+				}
+
+				// 새 항목을 배열 앞에 추가 (f_array_add_pop 함수 동작과 동일)
+				supplyZones.unshift({
 					type: 'supply',
 					index: i,
-					swingValue: candles[i].high,
+					swingValue: high.value,
 					boxTop,
 					boxBottom,
 					poi,
 					bos: false,
-					breakIndex: null as number | null,
+					breakIndex: null,
 					time: candles[i].time,
-					isOverlapping: isOverlapping
+					isOverlapping
 				});
 			}
 		}
-		// 스윙 로우 체크
-		if (isSwing(candles, i, swingLength, 'low')) {
-			swingLows.push({ index: i, value: candles[i].low, type: 'low' });
-			const atr = atrValues[i];
-			if (atr !== null) {
-				// 수요(하락 압력) 영역: 스윙 로우를 기준으로 박스 위쪽
-				const boxBottom = candles[i].low;
-				const atrBuffer = atr * (boxWidth / 10);
-				const boxTop = boxBottom + atrBuffer;
-				const poi = (boxTop + boxBottom) / 2;
-				const isOverlapping = checkOverlapping(poi, demandZones, atr);
-				demandZones.push({
+	}
+
+	// 스윙 로우에서 수요 영역 생성
+	for (const low of swingLows) {
+		const i = low.index;
+		const atr = atrValues[i];
+
+		if (atr !== null && atr !== undefined) {
+			const boxBottom = low.value;
+			const atrBuffer = atr * (boxWidth / 10);
+			const boxTop = boxBottom + atrBuffer;
+			const poi = (boxTop + boxBottom) / 2;
+
+			// 겹치는지 확인
+			const isOverlapping = !checkOverlapping(poi, demandZones, atr);
+
+			// 겹치지 않는 경우만 추가 (파인스크립트 버전과 일치)
+			if (!isOverlapping) {
+				// 배열 크기 관리: history 개수를 초과하면 가장 오래된 항목 제거
+				if (demandZones.length >= history) {
+					demandZones.pop(); // 가장 오래된 항목 제거 (배열 끝)
+				}
+
+				// 새 항목을 배열 앞에 추가 (f_array_add_pop 함수 동작과 동일)
+				demandZones.unshift({
 					type: 'demand',
 					index: i,
-					swingValue: candles[i].low,
+					swingValue: low.value,
 					boxTop,
 					boxBottom,
 					poi,
 					bos: false,
-					breakIndex: null as number | null,
+					breakIndex: null,
 					time: candles[i].time,
-					isOverlapping: isOverlapping
+					isOverlapping
 				});
 			}
 		}
 	}
 
-	// 오래된 영역 삭제 (history 적용)
-	if (supplyZones.length > history) {
-		supplyZones.splice(0, supplyZones.length - history);
-	}
-	if (demandZones.length > history) {
-		demandZones.splice(0, demandZones.length - history);
-	}
+	// BOS 확인 및 처리
+	checkBOSForZones(supplyZones, candles, supplyBOS);
+	checkBOSForZones(demandZones, candles, demandBOS);
 
-	// BOS 계산: 공급/수요 영역 이후, 가격이 해당 영역을 돌파하는지 체크
-	// 공급(BOS): 이후 캔들의 종가가 supply boxTop을 돌파하면
-	for (const zone of supplyZones) {
-		for (let i = zone.index + 1; i < candles.length; i++) {
-			if (candles[i].close >= zone.boxTop && checkBOSForZone(zone, candles) !== null) {
-				zone.bos = true;
-				zone.breakIndex = i;
-				bos.push({ ...zone });
-				break;
-			}
-		}
-	}
-	// 수요(BOS): 이후 캔들의 종가가 demand boxBottom을 하향 돌파하면
-	for (const zone of demandZones) {
-		for (let i = zone.index + 1; i < candles.length; i++) {
-			if (candles[i].close <= zone.boxBottom && checkBOSForZone(zone, candles) !== null) {
-				zone.bos = true;
-				zone.breakIndex = i;
-				bos.push({ ...zone });
-				break;
-			}
-		}
-	}
-
+	// ZigZag 계산
 	const zigZag: { value: number; time: UTCTimestamp; type: string }[] = [];
-	const swingHighsLowsMerged = swingHighs.concat(swingLows).sort((a, b) => a.index - b.index);
+	const swingAll = [
+		...swingHighs.map((h) => ({ ...h, type: 'high' })),
+		...swingLows.map((l) => ({ ...l, type: 'low' }))
+	].sort((a, b) => a.index - b.index);
 
-	swingHighsLowsMerged.forEach((v, i) => {
-		if (i === 0 || v.type !== zigZag[zigZag.length - 1].type) {
-			zigZag.push({ time: candles[v.index].time, value: v.value, type: v.type });
+	// ZigZag 라인 생성 로직 (파인스크립트 버전과 유사하게 구현)
+	let prevType = '';
+	for (const swing of swingAll) {
+		if (prevType === '' || swing.type !== prevType) {
+			zigZag.push({
+				time: candles[swing.index].time,
+				value: swing.value,
+				type: swing.type
+			});
+			prevType = swing.type;
 		} else {
-			if (v.type === 'high') {
-				if (v.value > zigZag[zigZag.length - 1].value) {
-					zigZag.pop();
-					zigZag.push({ time: candles[v.index].time, value: v.value, type: v.type });
-				}
-			} else {
-				if (v.value < zigZag[zigZag.length - 1].value) {
-					zigZag.pop();
-					zigZag.push({ time: candles[v.index].time, value: v.value, type: v.type });
-				}
+			// 같은 유형의 연속 스윙인 경우, 극점만 유지
+			const lastZZ = zigZag[zigZag.length - 1];
+			if (
+				(swing.type === 'high' && swing.value > lastZZ.value) ||
+				(swing.type === 'low' && swing.value < lastZZ.value)
+			) {
+				zigZag.pop();
+				zigZag.push({
+					time: candles[swing.index].time,
+					value: swing.value,
+					type: swing.type
+				});
 			}
 		}
-	});
+	}
 
+	// 처리된 결과 반환
 	return {
 		swingHighs,
 		swingLows,
 		zigZag,
-		supplyZones,
-		demandZones,
-		bos
+		supplyZones: supplyZones.filter((z) => !z.isOverlapping && !z.bos), // 렌더링 필터링
+		demandZones: demandZones.filter((z) => !z.isOverlapping && !z.bos), // 렌더링 필터링
+		supplyBOS,
+		demandBOS
 	};
 }
