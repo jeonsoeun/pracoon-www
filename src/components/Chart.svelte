@@ -15,7 +15,6 @@
 	import { type BandData, BandsIndicator } from '../util/chart/BandIndicatorPlugin.js';
 	import { type BoxData, BoxIndicator } from '../util/chart/BoxIndicatorPlugin.js';
 	import { LabelIndicator, type LabelData } from '../util/chart/LabelPlugin.js';
-	import { SupplyDemandAnalyzer } from '../util/chart/FluidSmcLite.js';
 
 	const chartId = 'chart';
 
