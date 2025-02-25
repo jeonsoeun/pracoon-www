@@ -15,6 +15,7 @@
 	import { type BandData, BandsIndicator } from '../util/chart/BandIndicatorPlugin.js';
 	import { type BoxData, BoxIndicator } from '../util/chart/BoxIndicatorPlugin.js';
 	import { LabelIndicator, type LabelData } from '../util/chart/LabelPlugin.js';
+	import { SupplyDemandAnalyzer } from '../util/chart/FluidSmcLite.js';
 
 	const chartId = 'chart';
 
@@ -30,6 +31,8 @@
 	let fluidSmcLiteZigZagColor = $state<string>('rgba(252, 186, 3, 0.5)');
 	let fluidSmcLiteSupplyBoxIndicator = $state<BoxIndicator>();
 	let fluidSmcLiteDemandBoxIndicator = $state<BoxIndicator>();
+	let fluidSmcLiteSupplyBoxIndicator2 = $state<BoxIndicator>();
+	let fluidSmcLiteDemandBoxIndicator2 = $state<BoxIndicator>();
 	let fluidSmcLiteBosIndicator = $state<LabelIndicator>();
 	let fluidSmcLiteStructureIndicator = $state<LabelIndicator>();
 	let chartMain = $state<IChartApi | undefined>(undefined);
@@ -93,6 +96,14 @@
 			fillColor: fluidSmcLiteDemandColor,
 			lineColor: 'rgba(0,0,0,0)'
 		});
+		// fluidSmcLiteSupplyBoxIndicator2 = new BoxIndicator({
+		// 	fillColor: fluidSmcLiteSupplyColor,
+		// 	lineColor: 'rgba(255,0,0,0.5)'
+		// });
+		// fluidSmcLiteDemandBoxIndicator2 = new BoxIndicator({
+		// 	fillColor: fluidSmcLiteDemandColor,
+		// 	lineColor: 'rgba(0,0,255,0.5)'
+		// });
 		fluidSmcLiteBosIndicator = new LabelIndicator({
 			textColor: 'rgba(0,0,0,0.5)',
 			fontSize: 12
@@ -103,6 +114,8 @@
 		});
 		fluidSmcLiteZigZagSeries.attachPrimitive(fluidSmcLiteSupplyBoxIndicator);
 		fluidSmcLiteZigZagSeries.attachPrimitive(fluidSmcLiteDemandBoxIndicator);
+		// fluidSmcLiteZigZagSeries.attachPrimitive(fluidSmcLiteSupplyBoxIndicator2);
+		// fluidSmcLiteZigZagSeries.attachPrimitive(fluidSmcLiteDemandBoxIndicator2);
 		fluidSmcLiteZigZagSeries.attachPrimitive(fluidSmcLiteBosIndicator);
 
 		// // 차트 클릭하면 좌표 알려줘
@@ -155,9 +168,7 @@
 							startTime: v.time,
 							endTime: Infinity as UTCTimestamp,
 							top: v.boxTop,
-							bottom: v.boxBottom,
-							borderColor: 'rgba(255, 70, 70, 1)',
-							backgroundColor: 'rgba(255, 70, 70, 0.2)'
+							bottom: v.boxBottom
 						};
 					});
 
@@ -169,9 +180,7 @@
 							startTime: v.time,
 							endTime: Infinity as UTCTimestamp,
 							top: v.boxTop,
-							bottom: v.boxBottom,
-							borderColor: 'rgba(70, 130, 180, 1)',
-							backgroundColor: 'rgba(70, 130, 180, 0.2)'
+							bottom: v.boxBottom
 						};
 					});
 
@@ -203,7 +212,7 @@
 							color: v.type.includes('HH') || v.type.includes('HL') ? 'green' : 'red'
 						};
 					});
-
+				console.log('orn', supplyData, demandData);
 				// 데이터 적용
 				fluidSmcLiteSupplyBoxIndicator?.setBoxesData(supplyData);
 				fluidSmcLiteDemandBoxIndicator?.setBoxesData(demandData);
@@ -212,6 +221,37 @@
 				// 마켓 구조 레이블 설정 (새로운 시리즈가 필요할 수 있음)
 				fluidSmcLiteStructureIndicator?.setLabelsData(structureLabels);
 			}
+
+			// // SMC lite 새로만든거
+			// // 분석기 인스턴스 생성
+			// const analyzer = new SupplyDemandAnalyzer({
+			// 	swingLength: 10, // 스윙 고점/저점 길이
+			// 	historyToKeep: 20 // 유지할 존의 개수
+			// });
+
+			// candleChartData.map((v, i) => {
+			// 	analyzer.update({ ...v, index: i });
+			// });
+
+			// // 결과 가져오기
+			// const supplyZones = analyzer.getSupplyZones().map((v) => ({
+			// 	startTime: candleChartData[v.left].time,
+			// 	endTime: Infinity as UTCTimestamp,
+			// 	top: v.top,
+			// 	bottom: v.bottom
+			// }));
+			// const demandZones = analyzer.getDemandZones().map((v) => ({
+			// 	startTime: candleChartData[v.left].time,
+			// 	endTime: Infinity as UTCTimestamp,
+			// 	top: v.top,
+			// 	bottom: v.bottom
+			// }));
+			// const bosZones = analyzer.getBOSZones();
+			// const swingPatterns = analyzer.getSwingPatterns();
+			// console.log(supplyZones, demandZones);
+			// fluidSmcLiteSupplyBoxIndicator2?.setBoxesData(supplyZones);
+			// fluidSmcLiteDemandBoxIndicator2?.setBoxesData(demandZones);
+			// // fluidSmcLiteBosIndicator?.setLabelsData(bosList);
 		}
 	});
 </script>

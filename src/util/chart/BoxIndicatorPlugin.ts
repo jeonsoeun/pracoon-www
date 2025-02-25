@@ -99,6 +99,7 @@ class BoxIndicatorPaneView implements ISeriesPrimitivePaneView {
 		};
 	}
 	update() {
+		if (this._source._boxesData.length === 0) return;
 		const series = this._source.series;
 		const timeScale = this._source.chart.timeScale();
 		// BoxData 배열의 각 항목을 캔버스 좌표로 변환
