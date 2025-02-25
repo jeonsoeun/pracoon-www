@@ -93,14 +93,6 @@
 			fillColor: fluidSmcLiteDemandColor,
 			lineColor: 'rgba(0,0,0,0)'
 		});
-		// fluidSmcLiteSupplyBoxIndicator2 = new BoxIndicator({
-		// 	fillColor: fluidSmcLiteSupplyColor,
-		// 	lineColor: 'rgba(255,0,0,0.5)'
-		// });
-		// fluidSmcLiteDemandBoxIndicator2 = new BoxIndicator({
-		// 	fillColor: fluidSmcLiteDemandColor,
-		// 	lineColor: 'rgba(0,0,255,0.5)'
-		// });
 		fluidSmcLiteBosIndicator = new LabelIndicator({
 			textColor: 'rgba(0,0,0,0.5)',
 			fontSize: 12
@@ -112,6 +104,7 @@
 		fluidSmcLiteZigZagSeries.attachPrimitive(fluidSmcLiteSupplyBoxIndicator);
 		fluidSmcLiteZigZagSeries.attachPrimitive(fluidSmcLiteDemandBoxIndicator);
 		fluidSmcLiteZigZagSeries.attachPrimitive(fluidSmcLiteBosIndicator);
+		fluidSmcLiteZigZagSeries.attachPrimitive(fluidSmcLiteStructureIndicator);
 
 		// // 차트 클릭하면 좌표 알려줘
 		// const canvas = chartMain?.chartElement().getElementsByTagName('canvas')?.[0];
@@ -188,32 +181,11 @@
 					};
 				});
 
-				// 마켓 구조 표시 데이터 설정 (HL, LH, HH, LL)
-				const structureLabels: LabelData[] = smcLite.zigZag
-					.filter(
-						(v) =>
-							v.type.includes('HH') ||
-							v.type.includes('LL') ||
-							v.type.includes('LH') ||
-							v.type.includes('HL')
-					)
-					.map((v) => {
-						// 타입에서 구조 레이블 추출 (HH/LL/LH/HL)
-						const structureType = v.type.split(' ')[1];
-						return {
-							time: v.time,
-							price: v.value,
-							text: structureType,
-							color: v.type.includes('HH') || v.type.includes('HL') ? 'green' : 'red'
-						};
-					});
 				// 데이터 적용
 				fluidSmcLiteSupplyBoxIndicator?.setBoxesData(supplyData);
 				fluidSmcLiteDemandBoxIndicator?.setBoxesData(demandData);
-				fluidSmcLiteBosIndicator?.setLabelsData(bosList);
-
-				// 마켓 구조 레이블 설정 (새로운 시리즈가 필요할 수 있음)
-				fluidSmcLiteStructureIndicator?.setLabelsData(structureLabels);
+				// fluidSmcLiteBosIndicator?.setLabelsData(bosList);
+				fluidSmcLiteStructureIndicator?.setLabelsData(smcLite.swingLabels);
 			}
 		}
 	});

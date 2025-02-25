@@ -32,11 +32,11 @@ export interface LabelIndicatorOptions {
 
 const defaults: Required<LabelIndicatorOptions> = {
 	textColor: 'rgb(25, 200, 100)',
-	fillColor: 'rgba(25, 200, 100, 0.25)',
+	fillColor: 'rgba(25, 200, 100, 0)',
 	lineWidth: 1,
 	lineColor: 'rgb(25, 200, 100)',
 	lineVisible: false,
-	align: 'right',
+	align: 'center',
 	fontSize: 12
 };
 
@@ -78,7 +78,8 @@ class LabelIndicatorPaneRenderer implements ISeriesPrimitivePaneRenderer {
 			// ctx.strokeStyle = this._viewData.options.lineColor;
 			// ctx.lineWidth = this._viewData.options.lineWidth;
 			// ctx.fillStyle = this._viewData.options.fillColor;
-
+			ctx.textAlign = this._viewData.options.align;
+			ctx.fillStyle = this._viewData.options.textColor;
 			// 각 박스를 반복하며 그립니다.
 			for (const label of labels) {
 				ctx.beginPath();
@@ -104,6 +105,7 @@ class LabelIndicatorPaneView implements ISeriesPrimitivePaneView {
 		};
 	}
 	update() {
+		if (this._source._boxesData.length === 0) return;
 		const series = this._source.series;
 		const timeScale = this._source.chart.timeScale();
 		// LabelData 배열의 각 항목을 캔버스 좌표로 변환
@@ -134,7 +136,7 @@ export class LabelIndicator extends PluginBase implements ISeriesPrimitive<Time>
 	constructor(options: LabelIndicatorOptions = {}) {
 		super();
 		this._options = { ...defaults, ...options };
-		this._paneViews = [];
+		this._paneViews = [new LabelIndicatorPaneView(this)];
 	}
 
 	// 외부에서 여러 LabelData를 설정

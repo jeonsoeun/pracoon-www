@@ -214,6 +214,8 @@ export function calculateFluidSMCLite(
 		...swingHighs.map((h) => ({ ...h, type: 'high' })),
 		...swingLows.map((l) => ({ ...l, type: 'low' }))
 	].sort((a, b) => a.index - b.index);
+	const swingHighsLabels: { time: UTCTimestamp; price: number; text: 'HH' | 'HL' }[] = [];
+	const swingLowsLabels: { time: UTCTimestamp; price: number; text: 'LL' | 'LH' }[] = [];
 
 	let prevType = '';
 	for (const swing of swingAll) {
@@ -238,6 +240,27 @@ export function calculateFluidSMCLite(
 				});
 			}
 		}
+		if (swing.type === 'high') {
+			swingHighsLabels.push({
+				time: candles[swing.index].time,
+				price: swing.value,
+				text:
+					swingHighsLabels.length > 1 &&
+					swingHighsLabels[swingHighsLabels.length - 1].price < swing.value
+						? 'HH'
+						: 'HL'
+			});
+		} else {
+			swingLowsLabels.push({
+				time: candles[swing.index].time,
+				price: swing.value - swing.value * 0.005,
+				text:
+					swingLowsLabels.length > 1 &&
+					swingLowsLabels[swingLowsLabels.length - 1].price > swing.value
+						? 'LL'
+						: 'LH'
+			});
+		}
 	}
 
 	return {
@@ -248,6 +271,7 @@ export function calculateFluidSMCLite(
 		supplyZones: supplyZones.filter((z) => !z.bos),
 		demandZones: demandZones.filter((z) => !z.bos),
 		supplyBOS,
-		demandBOS
+		demandBOS,
+		swingLabels: [...swingHighsLabels, ...swingLowsLabels]
 	};
 }
