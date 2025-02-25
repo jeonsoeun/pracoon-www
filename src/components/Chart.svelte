@@ -207,7 +207,6 @@
 							color: v.type.includes('HH') || v.type.includes('HL') ? 'green' : 'red'
 						};
 					});
-				console.log('orn', supplyData, demandData);
 				// 데이터 적용
 				fluidSmcLiteSupplyBoxIndicator?.setBoxesData(supplyData);
 				fluidSmcLiteDemandBoxIndicator?.setBoxesData(demandData);
