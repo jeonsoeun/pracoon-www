@@ -3,8 +3,12 @@
 	import { getBtcChartData } from '../data/chart/getBtcChartData.js';
 	import type { CandleChartItem } from '../types/chart.js';
 	import {
+		BaselineSeries,
+		CandlestickSeries,
 		createChart,
 		CrosshairMode,
+		HistogramSeries,
+		LineSeries,
 		type IChartApi,
 		type ISeriesApi,
 		type Time,
@@ -15,11 +19,14 @@
 	import { type BandData, BandsIndicator } from '../util/chart/BandIndicatorPlugin.js';
 	import { type BoxData, BoxIndicator } from '../util/chart/BoxIndicatorPlugin.js';
 	import { LabelIndicator, type LabelData } from '../util/chart/LabelPlugin.js';
+	import { calculateRSI } from '../util/chart/calculateRsi.js';
 
 	const chartId = 'chart';
 
 	let candleChartData = $state<CandleChartItem[]>([]);
+	let volumeData = $state<{ time: UTCTimestamp; value: number; color: string }[]>([]);
 	let candleSeries = $state<ISeriesApi<'Candlestick', Time>>();
+	let volumeSeries = $state<ISeriesApi<'Histogram', Time>>();
 	let bollingerSmcBandSeries = $state<ISeriesApi<'Line', Time>>(); // 볼린저 밴드(중간)
 	let bollingerBandIndicator = $state<BandsIndicator>(); // 볼린저 밴드 상하와 중간 배경색
 	let fluidSmcLiteZigZagSeries = $state<ISeriesApi<'Line', Time>>(); // Fluid SMC Lite
@@ -33,11 +40,19 @@
 	let fluidSmcLiteBosIndicator = $state<LabelIndicator>();
 	let fluidSmcLiteStructureIndicator = $state<LabelIndicator>();
 	let chartMain = $state<IChartApi | undefined>(undefined);
+	let rsiSeries = $state<ISeriesApi<'Baseline', Time>>();
 
 	onMount(() => {
 		getBtcChartData('4h').then((data) => {
 			candleChartData = data.map((item) => {
 				const time = new Date(item.openTime);
+				const volume = Number(item.volume);
+				const color = item.close > item.open ? '#26a69a' : '#ef5350';
+				volumeData.push({
+					time: (time.getTime() / 1000) as UTCTimestamp,
+					value: volume,
+					color: color
+				});
 				return {
 					time: (time.getTime() / 1000) as UTCTimestamp,
 					open: Number(item.open),
@@ -52,21 +67,30 @@
 			crosshair: {
 				mode: CrosshairMode.Normal
 			},
-			autoSize: true
+			autoSize: true,
+			layout: {
+				panes: {
+					enableResize: false
+				}
+			}
 		});
 
 		// 세팅 캔들 차트
-		candleSeries = chartMain.addCandlestickSeries({
+		candleSeries = chartMain.addSeries(CandlestickSeries, {
 			upColor: '#26a69a',
 			downColor: '#ef5350',
 			borderVisible: false,
 			wickUpColor: '#26a69a',
 			wickDownColor: '#ef5350'
 		});
+
 		candleSeries.setData(candleChartData);
 
+		// 세팅 볼륨 차트
+		volumeSeries = chartMain.addSeries(HistogramSeries, {}, 1);
+
 		// 세팅 볼린저밴드 차트
-		bollingerSmcBandSeries = chartMain.addLineSeries({
+		bollingerSmcBandSeries = chartMain.addSeries(LineSeries, {
 			color: bollingerBandColor,
 			lineWidth: 1,
 			priceLineVisible: false,
@@ -79,7 +103,7 @@
 		bollingerSmcBandSeries.attachPrimitive(bollingerBandIndicator);
 
 		// 세팅 Fluid SMC Lite 차트
-		fluidSmcLiteZigZagSeries = chartMain.addLineSeries({
+		fluidSmcLiteZigZagSeries = chartMain.addSeries(LineSeries, {
 			color: fluidSmcLiteZigZagColor,
 			lineWidth: 1,
 			priceLineVisible: false,
@@ -106,6 +130,21 @@
 		fluidSmcLiteZigZagSeries.attachPrimitive(fluidSmcLiteBosIndicator);
 		fluidSmcLiteZigZagSeries.attachPrimitive(fluidSmcLiteStructureIndicator);
 
+		// RSI 차트
+		rsiSeries = chartMain.addSeries(
+			BaselineSeries,
+			{
+				baseLineVisible: false,
+				baseValue: { price: 70, type: 'price' },
+				lineWidth: 1,
+				topFillColor1: 'rgba(0, 255, 0, 0.1)',
+				bottomFillColor1: 'rgba(255, 0, 0, 0.1)',
+				priceLineVisible: false,
+				crosshairMarkerVisible: false
+			},
+			2
+		);
+
 		// // 차트 클릭하면 좌표 알려줘
 		// const canvas = chartMain?.chartElement().getElementsByTagName('canvas')?.[0];
 		// canvas.addEventListener('click', function (event) {
@@ -122,7 +161,17 @@
 
 	$effect(() => {
 		if (candleChartData) {
-			if (candleSeries) candleSeries.setData(candleChartData);
+			if (candleSeries) {
+				candleSeries.setData(candleChartData);
+				candleSeries.priceScale().applyOptions({
+					autoScale: false,
+					scaleMargins: {
+						top: 0.1,
+						bottom: 0.2
+					}
+				});
+			}
+			if (volumeData && volumeSeries) volumeSeries.setData(volumeData);
 			// 볼린저 밴드 계산;
 			const bollingerBands = calculateBollingerBands(candleChartData);
 			if (bollingerBands && bollingerSmcBandSeries) {
@@ -186,6 +235,12 @@
 				fluidSmcLiteDemandBoxIndicator?.setBoxesData(demandData);
 				// fluidSmcLiteBosIndicator?.setLabelsData(bosList);
 				fluidSmcLiteStructureIndicator?.setLabelsData(smcLite.swingLabels);
+			}
+
+			// RSI 계산
+			const rsiData = calculateRSI(candleChartData, 14);
+			if (rsiData && rsiSeries) {
+				rsiSeries.setData(rsiData);
 			}
 		}
 	});
