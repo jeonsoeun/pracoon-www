@@ -8,7 +8,7 @@ type Candle = {
 	close: number;
 };
 
-type RSIResult = {
+export type RSIResult = {
 	time: UTCTimestamp;
 	value: number;
 };

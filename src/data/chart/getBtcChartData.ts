@@ -1,4 +1,4 @@
-// import { btcDataFromBinance } from './fakeChartData.js';
+import { btcDataFromBinance } from './fakeChartData.js';
 
 export interface BinanceChartData {
 	openTime: number;
@@ -17,19 +17,19 @@ export interface BinanceChartData {
 type Interval = '1m' | '5m' | '15m' | '1h' | '4h' | '1d' | '1w';
 
 export const getBtcChartData = async (interval: Interval): Promise<BinanceChartData[]> => {
-	const response = await fetch(
-		`https://data-api.binance.vision/api/v3/klines?symbol=BTCUSDT&interval=${interval}&timeZone=4`
-	)
-		.then((res) => res.json())
-		.then((data) => {
-			return data;
-		})
-		.catch((error) => {
-			console.error(error);
-			return [];
-		});
+	// const response = await fetch(
+	// 	`https://data-api.binance.vision/api/v3/klines?symbol=BTCUSDT&interval=${interval}&timeZone=4`
+	// )
+	// 	.then((res) => res.json())
+	// 	.then((data) => {
+	// 		return data;
+	// 	})
+	// 	.catch((error) => {
+	// 		console.error(error);
+	// 		return [];
+	// 	});
 
-	// const response = btcDataFromBinance;
+	const response = btcDataFromBinance;
 
 	const parsedData = response.map((item: (string | number)[]) => {
 		return {
