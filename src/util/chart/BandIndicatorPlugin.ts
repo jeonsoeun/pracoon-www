@@ -2,8 +2,8 @@ import { CanvasRenderingTarget2D } from 'fancy-canvas';
 import type {
 	Coordinate,
 	ISeriesPrimitive,
-	ISeriesPrimitivePaneRenderer,
-	ISeriesPrimitivePaneView,
+	IPrimitivePaneRenderer,
+	IPrimitivePaneView,
 	Time
 } from 'lightweight-charts';
 import { PluginBase } from './PluginBase.js';
@@ -32,7 +32,7 @@ const defaults: Required<BandsIndicatorOptions> = {
 //
 // 렌더러 클래스
 //
-class BandsIndicatorPaneRenderer implements ISeriesPrimitivePaneRenderer {
+class BandsIndicatorPaneRenderer implements IPrimitivePaneRenderer {
 	_viewData: BandViewData;
 	constructor(data: BandViewData) {
 		this._viewData = data;
@@ -94,7 +94,7 @@ interface BandViewData {
 	options: Required<BandsIndicatorOptions>;
 }
 
-class BandsIndicatorPaneView implements ISeriesPrimitivePaneView {
+class BandsIndicatorPaneView implements IPrimitivePaneView {
 	_source: BandsIndicator;
 	_data: BandViewData;
 	constructor(source: BandsIndicator) {

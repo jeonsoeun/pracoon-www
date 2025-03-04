@@ -2,8 +2,8 @@ import { CanvasRenderingTarget2D } from 'fancy-canvas';
 import type {
 	Coordinate,
 	ISeriesPrimitive,
-	ISeriesPrimitivePaneRenderer,
-	ISeriesPrimitivePaneView,
+	IPrimitivePaneRenderer,
+	IPrimitivePaneView,
 	Time
 } from 'lightweight-charts';
 import { PluginBase } from './PluginBase.js';
@@ -54,7 +54,7 @@ interface BoxViewData {
 //
 // 캔버스 렌더러: 각 사각형을 그리고 채우는 역할
 //
-class BoxIndicatorPaneRenderer implements ISeriesPrimitivePaneRenderer {
+class BoxIndicatorPaneRenderer implements IPrimitivePaneRenderer {
 	_viewData: BoxViewData;
 	constructor(viewData: BoxViewData) {
 		this._viewData = viewData;
@@ -88,7 +88,7 @@ class BoxIndicatorPaneRenderer implements ISeriesPrimitivePaneRenderer {
 //
 // Pane View: BoxData 배열을 캔버스 좌표(BoxRendererData) 배열로 변환
 //
-class BoxIndicatorPaneView implements ISeriesPrimitivePaneView {
+class BoxIndicatorPaneView implements IPrimitivePaneView {
 	_source: BoxIndicator;
 	_viewData: BoxViewData;
 	constructor(source: BoxIndicator) {

@@ -11,6 +11,7 @@
 		LineSeries,
 		type IChartApi,
 		type ISeriesApi,
+		type LineData,
 		type Time,
 		type UTCTimestamp
 	} from 'lightweight-charts';
@@ -20,8 +21,7 @@
 	import { type BoxData, BoxIndicator } from '../util/chart/BoxIndicatorPlugin.js';
 	import { LabelIndicator, type LabelData } from '../util/chart/LabelPlugin.js';
 	import { calculateRSI } from '../util/chart/calculateRsi.js';
-	import { createRsiSeries, setRsiSeriesData } from '../util/chart/drawRsi.js';
-
+	import { BinaryBaselineSeries } from '../util/chart/BinaryBaselineSeries.js';
 	const chartId = 'chart';
 
 	let candleChartData = $state<CandleChartItem[]>([]);
@@ -41,9 +41,7 @@
 	let fluidSmcLiteBosIndicator = $state<LabelIndicator>();
 	let fluidSmcLiteStructureIndicator = $state<LabelIndicator>();
 	let chartMain = $state<IChartApi | undefined>(undefined);
-	let rsiSeries = $state<
-		[ISeriesApi<'Baseline', Time>, ISeriesApi<'Baseline', Time>] | undefined
-	>();
+	let rsiSeries = $state<ISeriesApi<'Custom', Time> | undefined>();
 
 	onMount(() => {
 		getBtcChartData('4h').then((data) => {
@@ -134,14 +132,15 @@
 		fluidSmcLiteZigZagSeries.attachPrimitive(fluidSmcLiteStructureIndicator);
 
 		// RSI 차트
-		createRsiSeries(
-			chartMain,
-			(series) => {
-				rsiSeries = series;
+		const rsiSeriesView = new BinaryBaselineSeries();
+		rsiSeries = chartMain.addCustomSeries(
+			rsiSeriesView,
+			{
+				baseUpperValue: 70,
+				baseLowerValue: 30,
+				baseLineVisible: true
 			},
-			2,
-			70,
-			30
+			2
 		);
 
 		// // 차트 클릭하면 좌표 알려줘
@@ -239,7 +238,7 @@
 			// RSI 계산
 			const rsiData = calculateRSI(candleChartData, 14);
 			if (rsiData && rsiSeries) {
-				setRsiSeriesData(rsiSeries, rsiData);
+				rsiSeries.setData(rsiData);
 			}
 		}
 	});
