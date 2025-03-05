@@ -61,7 +61,6 @@ class BinaryBaselineSeriesRenderer implements ICustomSeriesPaneRenderer {
 			const canvasWidth = scope.bitmapSize.width;
 
 			// ② 데이터 포인트 계산 (x, y 좌표에 horizontal/vertical pixel ratio 적용)
-			console.log('bars', this._data.bars);
 			const points = this._data.bars
 				.filter((_, i) => i >= visibleRange.from && i <= visibleRange.to)
 				.map((bar) => {
@@ -247,7 +246,6 @@ export class BinaryBaselineSeries
 		data: PaneRendererCustomData<Time, LineData>,
 		seriesOptions: BinaryBaselineSeriesOptions
 	): void {
-		console.log('update', data, seriesOptions);
 		this._renderer.update({
 			data: data,
 			option: seriesOptions
